@@ -1,0 +1,4415 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TERRA API",
+    "description": "\nBackend TERRA — platform dua sisi untuk menyalurkan hasil panen yang tidak\nterserap pasar. Dibangun untuk **GEMASTIK 2026**.\n\nAPI-only. Klien produksinya adalah aplikasi React Native yang dikerjakan\nterpisah; halaman ini (`/docs`) adalah kontrak API sekaligus antarmuka\npengujian manual.\n\n### Alur utama\n\n**Maju (petani):** `POST /klasifikasi` → `POST /penawaran` →\n`GET /penawaran/{id}/rekomendasi` → `GET /penawaran/{id}/pembeli` →\n`GET /penawaran/{id}/kartu`\n\n**Balik (pembeli):** `POST /permintaan` → *petani memublikasikan penawaran\nyang cocok* → `GET /notifikasi/saya` → `GET /kecocokan/saya`\n\n### Cara memakai halaman ini\n\nTekan **Authorize** di kanan atas dan isi salah satu token demo:\n`demo-petani-1`, `demo-petani-2`, `demo-pembeli-1` … `demo-pembeli-6`.\n\n### Yang masih placeholder\n\n| Bagian | Status |\n|---|---|\n| Klasifikasi YOLO | **Tiruan.** Bentuk respons final; hasil dibuat-buat tapi bervariasi dan konsisten per foto. Cek `sumber_placeholder`. |\n| Pengiriman push | **Dicatat, tidak dikirim.** Notifikasi tersimpan dan dapat dibaca lewat `GET /notifikasi/saya`. |\n| Penyimpanan foto | **Tiruan.** URL foto tidak menunjuk ke berkas nyata. |\n\nSelain tiga hal di atas, seluruh logika bersifat nyata.\n\n### Yang sengaja tidak dibangun\n\nPerhitungan biaya angkut, penyaringan berdasarkan nilai bersih setelah ongkir,\nkonsolidasi pengiriman antar petani, dan pemrosesan pembayaran — semuanya di\nluar lingkup (PRD §3.2). Jarak dipakai untuk menyaring dan mengurutkan saja.\n",
+    "contact": {
+      "name": "Tim TERRA — GEMASTIK 2026"
+    },
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/onboarding/petani": {
+      "post": {
+        "tags": [
+          "A · Onboarding & Profil"
+        ],
+        "summary": "Daftar sebagai petani (A-01, A-02)",
+        "description": "Sign up on the supply side.\n\nReturns an access token -- copy it into the **Authorize** button at the\ntop of this page to use it for the rest of the flow.",
+        "operationId": "daftar_petani_onboarding_petani_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DaftarPetaniRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendaftaranResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onboarding/pembeli": {
+      "get": {
+        "tags": [
+          "A · Onboarding & Profil"
+        ],
+        "summary": "Daftar seluruh pembeli terdaftar (bantuan demo)",
+        "description": "Convenience listing so a demo can see who exists without a DB client.\n\nNot part of any PRD requirement.",
+        "operationId": "daftar_pembeli_terdaftar_onboarding_pembeli_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RingkasanPengguna"
+                  },
+                  "type": "array",
+                  "title": "Response Daftar Pembeli Terdaftar Onboarding Pembeli Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "A · Onboarding & Profil"
+        ],
+        "summary": "Daftar sebagai pembeli (A-01, A-03)",
+        "operationId": "daftar_pembeli_onboarding_pembeli_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DaftarPembeliRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendaftaranResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onboarding/saya": {
+      "get": {
+        "tags": [
+          "A · Onboarding & Profil"
+        ],
+        "summary": "Profil saya, termasuk ringkasan reputasi (A-04)",
+        "operationId": "profil_saya_onboarding_saya_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfilResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/onboarding/saya/lokasi": {
+      "patch": {
+        "tags": [
+          "A · Onboarding & Profil"
+        ],
+        "summary": "Perbarui lokasi utama (A-02)",
+        "operationId": "perbarui_lokasi_onboarding_saya_lokasi_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PerbaruiLokasiRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfilResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/onboarding/pengguna/{id_pengguna}": {
+      "get": {
+        "tags": [
+          "A · Onboarding & Profil"
+        ],
+        "summary": "Lihat profil pihak lain (F-07: reputasi terlihat sebelum kontak)",
+        "operationId": "profil_pengguna_onboarding_pengguna__id_pengguna__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_pengguna",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Pengguna"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfilResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/klasifikasi": {
+      "post": {
+        "tags": [
+          "B · Klasifikasi Kondisi"
+        ],
+        "summary": "Klasifikasi otomatis dari foto (B-01 … B-06, B-08)",
+        "description": "Upload photos and get back a condition label.\n\n⚠️ **Hasil saat ini berasal dari pengklasifikasi tiruan**, bukan model YOLO\nterlatih — lihat `sumber_placeholder` pada respons. Bentuk respons sudah\nfinal dan tidak berubah saat model asli dipasang.\n\nHasil bervariasi antar foto tapi konsisten untuk foto yang sama, sehingga\ndemo dapat diulang. Sekitar 1 dari 8 foto sengaja menghasilkan keyakinan\nrendah agar jalur konfirmasi manual (B-06) dapat diperagakan.",
+        "operationId": "klasifikasi_otomatis_klasifikasi_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_klasifikasi_otomatis_klasifikasi_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KlasifikasiResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/klasifikasi/manual": {
+      "post": {
+        "tags": [
+          "B · Klasifikasi Kondisi"
+        ],
+        "summary": "Klasifikasi manual / fallback (B-07)",
+        "description": "Declare the condition yourself, without a model in the loop.\n\nThe result is tagged `manual_dilaporkan_sendiri` and stays visually\ndistinguishable to buyers wherever it appears (PRD F-03).",
+        "operationId": "klasifikasi_manual_klasifikasi_manual_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KlasifikasiManualRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KlasifikasiResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/klasifikasi/{id_klasifikasi}": {
+      "get": {
+        "tags": [
+          "B · Klasifikasi Kondisi"
+        ],
+        "summary": "Lihat hasil klasifikasi",
+        "operationId": "ambil_klasifikasi_klasifikasi__id_klasifikasi__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_klasifikasi",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Klasifikasi"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RingkasanKlasifikasi"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/penawaran": {
+      "post": {
+        "tags": [
+          "D/E · Penawaran & Permintaan"
+        ],
+        "summary": "Publikasikan penawaran panen (§10.1 langkah 5)",
+        "description": "Publish harvest so buyers can find it.\n\nCreating an offer immediately runs it against every active buyer demand\n(PRD E-02) and notifies whoever matches (E-03). `jumlah_permintaan_cocok`\nin the response tells you how many buyers were alerted.",
+        "operationId": "buat_penawaran_penawaran_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuatPenawaranRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PenawaranResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "D/E · Penawaran & Permintaan"
+        ],
+        "summary": "Daftar penawaran",
+        "operationId": "daftar_penawaran_penawaran_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "komoditas",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Komoditas"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Komoditas"
+            }
+          },
+          {
+            "name": "status_penawaran",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/StatusPenawaran"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Penawaran"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PenawaranResponse"
+                  },
+                  "title": "Response Daftar Penawaran Penawaran Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/penawaran/saya": {
+      "get": {
+        "tags": [
+          "D/E · Penawaran & Permintaan"
+        ],
+        "summary": "Penawaran milik saya",
+        "operationId": "penawaran_saya_penawaran_saya_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PenawaranResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Penawaran Saya Penawaran Saya Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/penawaran/{id_penawaran}": {
+      "get": {
+        "tags": [
+          "D/E · Penawaran & Permintaan"
+        ],
+        "summary": "Detail penawaran",
+        "operationId": "detail_penawaran_penawaran__id_penawaran__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_penawaran",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Penawaran"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PenawaranResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/penawaran/{id_penawaran}/tersalurkan": {
+      "post": {
+        "tags": [
+          "D/E · Penawaran & Permintaan"
+        ],
+        "summary": "Tandai penawaran sudah tersalurkan",
+        "operationId": "tandai_tersalurkan_penawaran__id_penawaran__tersalurkan_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_penawaran",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Penawaran"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PenawaranResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/permintaan": {
+      "post": {
+        "tags": [
+          "D/E · Penawaran & Permintaan"
+        ],
+        "summary": "Pasang permintaan pembeli (E-01)",
+        "description": "Post standing demand -- the reverse flow (PRD §10.2).\n\nFarmers publishing matching supply after this will trigger a notification\nto you, without you searching.",
+        "operationId": "buat_permintaan_permintaan_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuatPermintaanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermintaanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/permintaan/saya": {
+      "get": {
+        "tags": [
+          "D/E · Penawaran & Permintaan"
+        ],
+        "summary": "Permintaan milik saya",
+        "operationId": "permintaan_saya_permintaan_saya_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PermintaanResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Permintaan Saya Permintaan Saya Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/permintaan/{id_permintaan}/tutup": {
+      "post": {
+        "tags": [
+          "D/E · Penawaran & Permintaan"
+        ],
+        "summary": "Tutup permintaan lebih awal (E-04)",
+        "operationId": "tutup_permintaan_permintaan__id_permintaan__tutup_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_permintaan",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Permintaan"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PermintaanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/penawaran/{id_penawaran}/rekomendasi": {
+      "get": {
+        "tags": [
+          "C · Rekomendasi Penyaluran"
+        ],
+        "summary": "2-3 opsi penyaluran untuk sebuah penawaran (C-01 … C-05)",
+        "description": "Disposal/sale options for a published offer.\n\nEvery option carries `id_aturan` -- the row in `config/rule_base.yaml`\nthat produced it (PRD C-01 acceptance, NF-06). Options are also marked\nwith whether a matching buyer actually exists nearby (C-03).",
+        "operationId": "rekomendasi_penawaran__id_penawaran__rekomendasi_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_penawaran",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Penawaran"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RekomendasiResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/basis-aturan": {
+      "get": {
+        "tags": [
+          "C · Rekomendasi Penyaluran"
+        ],
+        "summary": "Isi basis pengetahuan saat ini (C-04)",
+        "description": "The whole rule table as currently loaded.\n\nExposed so the team can confirm an edit to `config/rule_base.yaml`\nactually took effect, without database access or a redeploy.\n\n⚠️ Isi tabel ini masih berasal dari studi literatur dan belum divalidasi\nlewat wawancara pembeli (PRD §15).",
+        "operationId": "basis_aturan_basis_aturan_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasisPengetahuan"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/penawaran/{id_penawaran}/pembeli": {
+      "get": {
+        "tags": [
+          "D/E · Pencocokan Dua Sisi"
+        ],
+        "summary": "Pembeli terdekat yang cocok, terurut (D-01 … D-06)",
+        "description": "Forward flow: the farmer sees who can take this harvest.\n\nRanked by condition relevance, then proximity (PRD D-03). Every row\ncarries `alasan` -- the component scores and weights behind its position\n(NF-06). An empty result explains which filter removed each candidate\nrather than returning a bare empty list.\n\nDistance filters and ranks. It is never converted into a cost -- transport\neconomics are out of scope (PRD §3.2).",
+        "operationId": "cari_pembeli_penawaran__id_penawaran__pembeli_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_penawaran",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Penawaran"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HasilPencocokanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/penawaran/{id_penawaran}/kecocokan": {
+      "get": {
+        "tags": [
+          "D/E · Pencocokan Dua Sisi"
+        ],
+        "summary": "Kecocokan yang sudah tercatat untuk penawaran ini",
+        "operationId": "kecocokan_penawaran_penawaran__id_penawaran__kecocokan_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_penawaran",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Penawaran"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KecocokanTercatat"
+                  },
+                  "title": "Response Kecocokan Penawaran Penawaran  Id Penawaran  Kecocokan Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/kecocokan/saya": {
+      "get": {
+        "tags": [
+          "D/E · Pencocokan Dua Sisi"
+        ],
+        "summary": "Pasokan cocok yang masuk ke permintaan saya (E-02, E-03)",
+        "description": "Reverse flow: what has matched the demands this buyer posted.\n\nThese rows are created automatically when a farmer publishes matching\nsupply -- the buyer does not search for them.",
+        "operationId": "kecocokan_saya_kecocokan_saya_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/KecocokanTercatat"
+                  },
+                  "type": "array",
+                  "title": "Response Kecocokan Saya Kecocokan Saya Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/transaksi": {
+      "post": {
+        "tags": [
+          "F · Kepercayaan & Verifikasi"
+        ],
+        "summary": "Catat kesepakatan transaksi",
+        "description": "Record an agreed deal.\n\nTerra records that an agreement happened; it does not process payment or\nhold funds (out of scope, PRD §3.2). This record is what both reputation\ndirections and the impact dashboard are computed from.",
+        "operationId": "buat_transaksi_transaksi_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuatTransaksiRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RingkasanTransaksi"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/transaksi/{id_transaksi}/selesai": {
+      "post": {
+        "tags": [
+          "F · Kepercayaan & Verifikasi"
+        ],
+        "summary": "Selesaikan transaksi dan beri penilaian (§10.1 langkah 8)",
+        "operationId": "selesaikan_transaksi_transaksi__id_transaksi__selesai_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_transaksi",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Transaksi"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelesaikanTransaksiRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RingkasanTransaksi"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transaksi/{id_transaksi}/batal": {
+      "post": {
+        "tags": [
+          "F · Kepercayaan & Verifikasi"
+        ],
+        "summary": "Batalkan transaksi yang sudah disepakati (F-06)",
+        "description": "Cancel after agreement -- recorded against whoever cancelled.\n\nThis is the buyer-side accountability half of PRD F-06: the interview\nfinding was that farmers absorb 100% of the loss when a verbally-agreed\norder is pulled, with no reputational consequence for the buyer.",
+        "operationId": "batalkan_transaksi_transaksi__id_transaksi__batal_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_transaksi",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Transaksi"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatalkanTransaksiRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RingkasanTransaksi"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transaksi/saya": {
+      "get": {
+        "tags": [
+          "F · Kepercayaan & Verifikasi"
+        ],
+        "summary": "Riwayat transaksi saya",
+        "operationId": "transaksi_saya_transaksi_saya_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RingkasanTransaksi"
+                  },
+                  "type": "array",
+                  "title": "Response Transaksi Saya Transaksi Saya Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/laporan": {
+      "post": {
+        "tags": [
+          "F · Kepercayaan & Verifikasi"
+        ],
+        "summary": "Laporkan ketidaksesuaian kondisi (F-04)",
+        "description": "File a post-transaction mismatch report with comparison photos.",
+        "operationId": "buat_laporan_laporan_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuatLaporanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LaporanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/laporan/{id_laporan}/tinjau": {
+      "post": {
+        "tags": [
+          "F · Kepercayaan & Verifikasi"
+        ],
+        "summary": "Tinjau laporan: konfirmasi atau tolak (F-05)",
+        "description": "Confirm or reject a report; only confirmed ones move a score.\n\n⚠️ **Belum ada peran moderator.** Endpoint ini terbuka untuk semua\npengguna terautentikasi, yang jelas tidak memadai di luar MVP. Autentikasi\ntingkat produksi berada di luar lingkup saat ini (context.md) -- siapa pun\nyang menambahkan peran pengguna sebaiknya menutup endpoint ini lebih dulu.",
+        "operationId": "tinjau_laporan_laporan__id_laporan__tinjau_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_laporan",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Laporan"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TinjauLaporanRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LaporanResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/laporan/terhadap/{id_pengguna}": {
+      "get": {
+        "tags": [
+          "F · Kepercayaan & Verifikasi"
+        ],
+        "summary": "Laporan terhadap seorang pengguna",
+        "operationId": "laporan_terhadap_laporan_terhadap__id_pengguna__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_pengguna",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Pengguna"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LaporanResponse"
+                  },
+                  "title": "Response Laporan Terhadap Laporan Terhadap  Id Pengguna  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reputasi/{id_pengguna}": {
+      "get": {
+        "tags": [
+          "F · Kepercayaan & Verifikasi"
+        ],
+        "summary": "Reputasi dua arah seorang pengguna (F-05, F-06, F-07)",
+        "description": "Reputation derived from logged events, not from free-text reviews.\n\n`ringkasan_teks` states what the numbers are made of, so the counterparty\nsees the basis and not just a figure (PRD F-06 acceptance).",
+        "operationId": "reputasi_reputasi__id_pengguna__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_pengguna",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Pengguna"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RingkasanReputasi"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifikasi/saya": {
+      "get": {
+        "tags": [
+          "H · Notifikasi"
+        ],
+        "summary": "Notifikasi saya, yang mendesak lebih dulu (H-01, H-02)",
+        "description": "Notifications for the signed-in user.\n\n⚠️ **Pengiriman push masih placeholder.** Notifikasi disusun, diberi\nprioritas dan disimpan sungguhan, tapi tidak dikirim ke perangkat -- lihat\n`status_kirim` dan `modules/notifications/pengirim.py`. Endpoint ini\nadalah cara memverifikasi bahwa pencocokan balik (E-03) benar-benar\nmemicu notifikasi ke pembeli yang tepat.",
+        "operationId": "notifikasi_saya_notifikasi_saya_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NotifikasiResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Notifikasi Saya Notifikasi Saya Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/notifikasi/{id_notifikasi}/dibaca": {
+      "post": {
+        "tags": [
+          "H · Notifikasi"
+        ],
+        "summary": "Tandai notifikasi sudah dibaca",
+        "operationId": "tandai_dibaca_notifikasi__id_notifikasi__dibaca_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_notifikasi",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Notifikasi"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotifikasiResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/penawaran/{id_penawaran}/kartu": {
+      "get": {
+        "tags": [
+          "G · Komunitas & Berbagi"
+        ],
+        "summary": "Kartu penawaran siap dibagikan (G-01)",
+        "description": "Card content for the native share sheet.\n\nReturns data, not a rendered page: the React Native app draws the card and\nhands it to the OS share sheet (G-02). There is no web surface in this\nproduct, so the §6.7 acceptance criterion about a WhatsApp *link preview*\nis not met -- that would require a public HTML page with OG tags.\n\n`lokasi_umum` is deliberately coarse. Cards land in open groups, and the\nfarmer's exact pin should not travel with them.",
+        "operationId": "kartu_penawaran_penawaran__id_penawaran__kartu_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_penawaran",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Penawaran"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KartuBerbagi"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/penawaran/{id_penawaran}/kartu/dibagikan": {
+      "post": {
+        "tags": [
+          "G · Komunitas & Berbagi"
+        ],
+        "summary": "Catat bahwa kartu benar-benar dibagikan (analitik §12)",
+        "description": "Called by the app after the share sheet closes.\n\nFeeds the `card_shared` metric -- how much the external-channel path is\nactually used, which is one of the proposal's core behavioural claims.",
+        "operationId": "catat_berbagi_penawaran__id_penawaran__kartu_dibagikan_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_penawaran",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Penawaran"
+            }
+          },
+          {
+            "name": "kanal",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "examples": [
+                "whatsapp",
+                "facebook"
+              ],
+              "default": "lainnya",
+              "title": "Kanal"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/komunitas/papan": {
+      "get": {
+        "tags": [
+          "G · Komunitas & Berbagi"
+        ],
+        "summary": "Papan komunitas regional (G-03)",
+        "description": "Active listings and discussion for an area.\n\nA passive information surface. No shipment pooling is built on top of it,\nby design (PRD G-04, §3.2).",
+        "operationId": "papan_komunitas_papan_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "wilayah",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "examples": [
+                "Lembang"
+              ],
+              "title": "Wilayah"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PapanKomunitasResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/komunitas/pos": {
+      "post": {
+        "tags": [
+          "G · Komunitas & Berbagi"
+        ],
+        "summary": "Tulis pos di papan komunitas (G-03)",
+        "operationId": "buat_pos_komunitas_pos_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuatPosRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PosKomunitas"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/dampak/saya": {
+      "get": {
+        "tags": [
+          "I · Dasbor Dampak"
+        ],
+        "summary": "Dampak kumulatif saya (I-01, I-02)",
+        "description": "Cumulative value recovered, volume diverted, successful connections.\n\nAggregated from the signed-in user's own transaction history (I-02) --\nno platform-wide figures, and nothing extrapolated.",
+        "operationId": "dampak_saya_dampak_saya_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DampakResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Info layanan",
+        "operationId": "akar__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Akar  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Status"
+        ],
+        "summary": "Cek kesehatan",
+        "operationId": "kesehatan_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Aturan": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "komoditas": {
+            "$ref": "#/components/schemas/Komoditas"
+          },
+          "jenis_kondisi": {
+            "items": {
+              "$ref": "#/components/schemas/KondisiKode"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Jenis Kondisi"
+          },
+          "keparahan": {
+            "items": {
+              "$ref": "#/components/schemas/TingkatKeparahan"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Keparahan"
+          },
+          "catatan_aturan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catatan Aturan"
+          },
+          "opsi": {
+            "items": {
+              "$ref": "#/components/schemas/Opsi"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Opsi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "komoditas",
+          "jenis_kondisi",
+          "keparahan",
+          "opsi"
+        ],
+        "title": "Aturan",
+        "description": "One row of the knowledge base."
+      },
+      "BasisPengetahuan": {
+        "properties": {
+          "versi": {
+            "type": "integer",
+            "title": "Versi"
+          },
+          "aturan": {
+            "items": {
+              "$ref": "#/components/schemas/Aturan"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Aturan"
+          }
+        },
+        "type": "object",
+        "required": [
+          "versi",
+          "aturan"
+        ],
+        "title": "BasisPengetahuan"
+      },
+      "BatalkanTransaksiRequest": {
+        "properties": {
+          "alasan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alasan"
+          }
+        },
+        "type": "object",
+        "title": "BatalkanTransaksiRequest"
+      },
+      "Body_klasifikasi_otomatis_klasifikasi_post": {
+        "properties": {
+          "komoditas": {
+            "$ref": "#/components/schemas/Komoditas",
+            "description": "PRD B-03"
+          },
+          "pemicu": {
+            "$ref": "#/components/schemas/Pemicu",
+            "description": "PRD B-04"
+          },
+          "foto": {
+            "items": {
+              "type": "string",
+              "contentMediaType": "application/octet-stream"
+            },
+            "type": "array",
+            "title": "Foto",
+            "description": "1-3 foto (PRD B-01)"
+          },
+          "waktu_ambil": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waktu Ambil",
+            "description": "Waktu tangkap ISO-8601 dari kamera aplikasi (B-02)."
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude",
+            "description": "Koordinat tangkap foto (B-02, F-02)."
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "komoditas",
+          "pemicu",
+          "foto"
+        ],
+        "title": "Body_klasifikasi_otomatis_klasifikasi_post"
+      },
+      "BuatLaporanRequest": {
+        "properties": {
+          "id_transaksi": {
+            "type": "string",
+            "title": "Id Transaksi"
+          },
+          "kondisi_ditemukan": {
+            "items": {
+              "$ref": "#/components/schemas/KondisiKode"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Kondisi Ditemukan",
+            "description": "Kondisi sebenarnya yang ditemukan saat barang diterima."
+          },
+          "catatan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catatan"
+          },
+          "foto_pembanding": {
+            "items": {
+              "$ref": "#/components/schemas/Citra"
+            },
+            "type": "array",
+            "title": "Foto Pembanding",
+            "description": "Foto pembanding saat barang diterima."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_transaksi",
+          "kondisi_ditemukan"
+        ],
+        "title": "BuatLaporanRequest",
+        "description": "PRD F-04: post-transaction mismatch report with comparison photo."
+      },
+      "BuatPenawaranRequest": {
+        "properties": {
+          "id_klasifikasi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id Klasifikasi",
+            "examples": [
+              "kls_1a2b3c4d5e"
+            ]
+          },
+          "komoditas": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Komoditas"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pemicu": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Pemicu"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "jenis_kondisi": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/KondisiKode"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jenis Kondisi"
+          },
+          "tingkat_keparahan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TingkatKeparahan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "citra": {
+            "items": {
+              "$ref": "#/components/schemas/Citra"
+            },
+            "type": "array",
+            "title": "Citra"
+          },
+          "volume": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Volume",
+            "description": "kg",
+            "examples": [
+              120.0
+            ]
+          },
+          "lama_sejak_panen": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lama Sejak Panen",
+            "examples": [
+              2
+            ]
+          },
+          "kondisi_penyimpanan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KondisiPenyimpanan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "koordinat": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Koordinat"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Kosongkan untuk memakai lokasi terdaftar petani (A-02)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "volume"
+        ],
+        "title": "BuatPenawaranRequest",
+        "description": "Publish harvest for matching.\n\nTwo ways in, matching PRD §10.1:\n\n* **From a classification** -- pass `id_klasifikasi` and the commodity and\n  condition fields are taken from that run.\n* **Self-reported** -- omit `id_klasifikasi` and supply `komoditas`,\n  `pemicu`, `jenis_kondisi` and `tingkat_keparahan` yourself. The offer is\n  tagged `manual_dilaporkan_sendiri` (PRD B-07, F-03)."
+      },
+      "BuatPermintaanRequest": {
+        "properties": {
+          "komoditas_dicari": {
+            "items": {
+              "$ref": "#/components/schemas/Komoditas"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Komoditas Dicari",
+            "examples": [
+              [
+                "tomat"
+              ]
+            ]
+          },
+          "kondisi_diterima": {
+            "items": {
+              "$ref": "#/components/schemas/KondisiKode"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Kondisi Diterima",
+            "examples": [
+              [
+                "K0",
+                "K1",
+                "K2"
+              ]
+            ]
+          },
+          "keparahan_maksimal": {
+            "$ref": "#/components/schemas/TingkatKeparahan",
+            "description": "Batas atas keparahan yang masih diterima."
+          },
+          "volume_minimum": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Volume Minimum",
+            "description": "kg. Penawaran di bawah ini tidak ditampilkan (D-04).",
+            "default": 0
+          },
+          "volume_dibutuhkan": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Volume Dibutuhkan",
+            "description": "kg",
+            "examples": [
+              500.0
+            ]
+          },
+          "radius_maksimal": {
+            "type": "integer",
+            "maximum": 500.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Radius Maksimal",
+            "description": "km (D-02)",
+            "default": 50
+          },
+          "rentang_harga": {
+            "$ref": "#/components/schemas/RentangHarga",
+            "description": "Harga yang ditawarkan pembeli per kg PRODUK. Bukan ongkos angkut."
+          },
+          "koordinat": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Koordinat"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Kosongkan untuk memakai lokasi terdaftar pembeli."
+          },
+          "berlaku_hingga": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Berlaku Hingga",
+            "description": "Kedaluwarsa otomatis (E-04)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "komoditas_dicari",
+          "kondisi_diterima",
+          "keparahan_maksimal",
+          "volume_dibutuhkan"
+        ],
+        "title": "BuatPermintaanRequest",
+        "description": "PRD E-01: buyer posts standing demand (the reverse flow)."
+      },
+      "BuatPosRequest": {
+        "properties": {
+          "wilayah": {
+            "type": "string",
+            "title": "Wilayah",
+            "examples": [
+              "Lembang, Bandung Barat"
+            ]
+          },
+          "isi": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 3,
+            "title": "Isi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "wilayah",
+          "isi"
+        ],
+        "title": "BuatPosRequest",
+        "description": "PRD G-03: a free-text post on the regional board."
+      },
+      "BuatTransaksiRequest": {
+        "properties": {
+          "id_penawaran": {
+            "type": "string",
+            "title": "Id Penawaran"
+          },
+          "id_pembeli": {
+            "type": "string",
+            "title": "Id Pembeli"
+          },
+          "volume": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Volume",
+            "description": "kg yang disepakati"
+          },
+          "nilai_total": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Nilai Total",
+            "description": "Nilai produk yang disepakati, Rupiah. Tanpa komponen ongkos angkut."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_penawaran",
+          "id_pembeli",
+          "volume",
+          "nilai_total"
+        ],
+        "title": "BuatTransaksiRequest",
+        "description": "Record that a deal was agreed.\n\nTerra does not process payment or hold escrow (PRD §3.2) -- this is a\nrecord that two parties agreed, which is what both reputation directions\nand the impact dashboard are computed from."
+      },
+      "Citra": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "waktu_ambil": {
+            "type": "string",
+            "title": "Waktu Ambil"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "waktu_ambil"
+        ],
+        "title": "Citra",
+        "description": "One photo attached to an offer (PRD §8 `citra`, B-02).\n\n`waktu_ambil` and the capture coordinates come from the device at capture\ntime. PRD F-01 requires in-app capture rather than gallery upload; the\nbackend enforces the *presence* of this metadata, which is as far as\nserver-side verification can go."
+      },
+      "DaftarPembeliRequest": {
+        "properties": {
+          "nama": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Nama",
+            "examples": [
+              "Bu Rina"
+            ]
+          },
+          "jenis_usaha": {
+            "$ref": "#/components/schemas/JenisUsaha"
+          },
+          "nama_usaha": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nama Usaha",
+            "examples": [
+              "CV Saus Lembang"
+            ]
+          },
+          "koordinat": {
+            "$ref": "#/components/schemas/Koordinat"
+          },
+          "alamat_umum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alamat Umum",
+            "examples": [
+              "Cimahi"
+            ]
+          },
+          "nomor_whatsapp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nomor Whatsapp",
+            "examples": [
+              "6281234567891"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "nama",
+          "jenis_usaha",
+          "koordinat"
+        ],
+        "title": "DaftarPembeliRequest",
+        "description": "PRD A-01 + A-03."
+      },
+      "DaftarPetaniRequest": {
+        "properties": {
+          "nama": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Nama",
+            "examples": [
+              "Pak Dedi"
+            ]
+          },
+          "koordinat": {
+            "$ref": "#/components/schemas/Koordinat"
+          },
+          "komoditas_utama": {
+            "items": {
+              "$ref": "#/components/schemas/Komoditas"
+            },
+            "type": "array",
+            "title": "Komoditas Utama",
+            "examples": [
+              [
+                "tomat",
+                "wortel"
+              ]
+            ]
+          },
+          "alamat_umum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alamat Umum",
+            "description": "Lokasi umum yang ditampilkan ke pihak lain, bukan titik persis.",
+            "examples": [
+              "Lembang, Bandung Barat"
+            ]
+          },
+          "nomor_whatsapp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nomor Whatsapp",
+            "examples": [
+              "6281234567890"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "nama",
+          "koordinat"
+        ],
+        "title": "DaftarPetaniRequest",
+        "description": "PRD A-01 + A-02. Deliberately few fields (NF-02: max 3 steps)."
+      },
+      "DampakResponse": {
+        "properties": {
+          "id_pengguna": {
+            "type": "string",
+            "title": "Id Pengguna"
+          },
+          "nilai_terpulihkan": {
+            "type": "number",
+            "title": "Nilai Terpulihkan",
+            "description": "Total nilai produk yang berhasil disalurkan, Rupiah. Nilai kotor produk -- tanpa potongan ongkos angkut, yang memang tidak dimodelkan (PRD §3.2)."
+          },
+          "volume_dialihkan_kg": {
+            "type": "number",
+            "title": "Volume Dialihkan Kg",
+            "description": "Volume yang tersalurkan alih-alih terbuang."
+          },
+          "jumlah_koneksi_berhasil": {
+            "type": "integer",
+            "title": "Jumlah Koneksi Berhasil",
+            "description": "Transaksi berstatus selesai."
+          },
+          "jumlah_penawaran_dibuat": {
+            "type": "integer",
+            "title": "Jumlah Penawaran Dibuat",
+            "default": 0
+          },
+          "jumlah_penawaran_tersalurkan": {
+            "type": "integer",
+            "title": "Jumlah Penawaran Tersalurkan",
+            "default": 0
+          },
+          "tingkat_penyaluran": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tingkat Penyaluran",
+            "description": "Proporsi penawaran yang berakhir tersalurkan."
+          },
+          "transaksi_dibatalkan": {
+            "type": "integer",
+            "title": "Transaksi Dibatalkan",
+            "default": 0
+          },
+          "rincian_komoditas": {
+            "items": {
+              "$ref": "#/components/schemas/RincianKomoditas"
+            },
+            "type": "array",
+            "title": "Rincian Komoditas"
+          },
+          "catatan": {
+            "type": "string",
+            "title": "Catatan"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_pengguna",
+          "nilai_terpulihkan",
+          "volume_dialihkan_kg",
+          "jumlah_koneksi_berhasil",
+          "catatan"
+        ],
+        "title": "DampakResponse",
+        "description": "PRD I-01: cumulative impact for one user."
+      },
+      "Deteksi": {
+        "properties": {
+          "kelas": {
+            "$ref": "#/components/schemas/KondisiKode"
+          },
+          "keyakinan": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Keyakinan"
+          },
+          "kotak": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 4,
+            "minItems": 4,
+            "title": "Kotak"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kelas",
+          "keyakinan",
+          "kotak"
+        ],
+        "title": "Deteksi",
+        "description": "One detected region, shaped like a YOLO detection.\n\n`kotak` is [x_center, y_center, width, height], normalised 0-1 -- the\nUltralytics `xywhn` convention, so the real model's output maps straight\nacross with no rescaling."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HasilPencocokanResponse": {
+        "properties": {
+          "id_penawaran": {
+            "type": "string",
+            "title": "Id Penawaran"
+          },
+          "komoditas": {
+            "$ref": "#/components/schemas/Komoditas"
+          },
+          "jumlah_cocok": {
+            "type": "integer",
+            "title": "Jumlah Cocok"
+          },
+          "pembeli": {
+            "items": {
+              "$ref": "#/components/schemas/PembeliCocok"
+            },
+            "type": "array",
+            "title": "Pembeli"
+          },
+          "pesan": {
+            "type": "string",
+            "title": "Pesan"
+          },
+          "ringkasan_penyaringan": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Ringkasan Penyaringan"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_penawaran",
+          "komoditas",
+          "jumlah_cocok",
+          "pesan"
+        ],
+        "title": "HasilPencocokanResponse"
+      },
+      "JenisUsaha": {
+        "type": "string",
+        "enum": [
+          "pengolah_pangan",
+          "peternak",
+          "produsen_kompos",
+          "lainnya"
+        ],
+        "title": "JenisUsaha",
+        "description": "PRD A-03: buyer business type."
+      },
+      "KartuBerbagi": {
+        "properties": {
+          "id_penawaran": {
+            "type": "string",
+            "title": "Id Penawaran"
+          },
+          "judul": {
+            "type": "string",
+            "title": "Judul"
+          },
+          "ringkasan": {
+            "type": "string",
+            "title": "Ringkasan"
+          },
+          "komoditas": {
+            "$ref": "#/components/schemas/Komoditas"
+          },
+          "volume_kg": {
+            "type": "number",
+            "title": "Volume Kg"
+          },
+          "kondisi_terverifikasi": {
+            "type": "string",
+            "title": "Kondisi Terverifikasi"
+          },
+          "tingkat_keparahan": {
+            "$ref": "#/components/schemas/TingkatKeparahan"
+          },
+          "metode_klasifikasi": {
+            "$ref": "#/components/schemas/MetodeKlasifikasi"
+          },
+          "label_verifikasi": {
+            "type": "string",
+            "title": "Label Verifikasi"
+          },
+          "lokasi_umum": {
+            "type": "string",
+            "title": "Lokasi Umum"
+          },
+          "mendesak": {
+            "type": "boolean",
+            "title": "Mendesak"
+          },
+          "sisa_jendela_hari": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sisa Jendela Hari"
+          },
+          "url_foto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url Foto"
+          },
+          "tautan_dalam_aplikasi": {
+            "type": "string",
+            "title": "Tautan Dalam Aplikasi",
+            "description": "Deep link kembali ke aplikasi (G-01)."
+          },
+          "teks_siap_bagikan": {
+            "type": "string",
+            "title": "Teks Siap Bagikan"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_penawaran",
+          "judul",
+          "ringkasan",
+          "komoditas",
+          "volume_kg",
+          "kondisi_terverifikasi",
+          "tingkat_keparahan",
+          "metode_klasifikasi",
+          "label_verifikasi",
+          "lokasi_umum",
+          "mendesak",
+          "tautan_dalam_aplikasi",
+          "teks_siap_bagikan"
+        ],
+        "title": "KartuBerbagi",
+        "description": "PRD G-01: the shareable offer card, as data.\n\nThe React Native app renders this natively and passes the result to the\nOS share sheet (G-02). The backend deliberately does not render HTML or\nan image -- there is no web surface in this product (context.md)."
+      },
+      "KecocokanTercatat": {
+        "properties": {
+          "id_kecocokan": {
+            "type": "string",
+            "title": "Id Kecocokan"
+          },
+          "id_penawaran": {
+            "type": "string",
+            "title": "Id Penawaran"
+          },
+          "id_permintaan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id Permintaan"
+          },
+          "arah": {
+            "type": "string",
+            "title": "Arah",
+            "description": "'maju' = petani mencari, 'balik' = permintaan tersentuh."
+          },
+          "jarak_km": {
+            "type": "number",
+            "title": "Jarak Km"
+          },
+          "skor_relevansi": {
+            "type": "number",
+            "title": "Skor Relevansi"
+          },
+          "alasan": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Alasan"
+          },
+          "waktu_dibuat": {
+            "type": "string",
+            "title": "Waktu Dibuat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_kecocokan",
+          "id_penawaran",
+          "id_permintaan",
+          "arah",
+          "jarak_km",
+          "skor_relevansi",
+          "alasan",
+          "waktu_dibuat"
+        ],
+        "title": "KecocokanTercatat",
+        "description": "A stored match, as shown to a buyer in the reverse flow."
+      },
+      "KetersediaanPembeli": {
+        "properties": {
+          "ada": {
+            "type": "boolean",
+            "title": "Ada",
+            "default": false
+          },
+          "jumlah": {
+            "type": "integer",
+            "title": "Jumlah",
+            "default": 0
+          },
+          "jarak_terdekat_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jarak Terdekat Km"
+          }
+        },
+        "type": "object",
+        "title": "KetersediaanPembeli",
+        "description": "PRD C-03: does a buyer for this recommendation actually exist nearby?\n\nDeliberately thin -- a count and the nearest distance, nothing about who.\nA recommendation only needs to say \"yes, N buyers within X km can take\nthis\" or \"no match found, informational only\". The buyer list itself is\nthe matching endpoint's job."
+      },
+      "KlasifikasiManualRequest": {
+        "properties": {
+          "komoditas": {
+            "$ref": "#/components/schemas/Komoditas"
+          },
+          "pemicu": {
+            "$ref": "#/components/schemas/Pemicu"
+          },
+          "jenis_kondisi": {
+            "items": {
+              "$ref": "#/components/schemas/KondisiKode"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Jenis Kondisi",
+            "examples": [
+              [
+                "K2"
+              ]
+            ]
+          },
+          "tingkat_keparahan": {
+            "$ref": "#/components/schemas/TingkatKeparahan"
+          },
+          "citra": {
+            "items": {
+              "$ref": "#/components/schemas/Citra"
+            },
+            "type": "array",
+            "title": "Citra",
+            "description": "Opsional. Foto yang sudah diunggah sebelumnya, jika ada."
+          },
+          "koordinat_ambil": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Koordinat"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "komoditas",
+          "pemicu",
+          "jenis_kondisi",
+          "tingkat_keparahan"
+        ],
+        "title": "KlasifikasiManualRequest",
+        "description": "PRD B-07: the manual path a farmer can always fall back to.\n\nThe resulting listing is tagged `manual_dilaporkan_sendiri` and stays\nvisibly distinguishable from CV-classified listings wherever a buyer sees\nit (PRD F-03)."
+      },
+      "KlasifikasiResponse": {
+        "properties": {
+          "id_klasifikasi": {
+            "type": "string",
+            "title": "Id Klasifikasi"
+          },
+          "komoditas": {
+            "$ref": "#/components/schemas/Komoditas"
+          },
+          "pemicu": {
+            "$ref": "#/components/schemas/Pemicu"
+          },
+          "jenis_kondisi": {
+            "items": {
+              "$ref": "#/components/schemas/KondisiKode"
+            },
+            "type": "array",
+            "title": "Jenis Kondisi"
+          },
+          "tingkat_keparahan": {
+            "$ref": "#/components/schemas/TingkatKeparahan"
+          },
+          "skor_keyakinan": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skor Keyakinan",
+            "description": "Kosong untuk klasifikasi manual -- lihat metode_klasifikasi."
+          },
+          "metode_klasifikasi": {
+            "$ref": "#/components/schemas/MetodeKlasifikasi"
+          },
+          "label_bahasa": {
+            "type": "string",
+            "title": "Label Bahasa"
+          },
+          "penjelasan": {
+            "type": "string",
+            "title": "Penjelasan"
+          },
+          "butuh_konfirmasi_manual": {
+            "type": "boolean",
+            "title": "Butuh Konfirmasi Manual"
+          },
+          "tindakan_disarankan": {
+            "type": "string",
+            "title": "Tindakan Disarankan"
+          },
+          "deteksi": {
+            "items": {
+              "$ref": "#/components/schemas/Deteksi"
+            },
+            "type": "array",
+            "title": "Deteksi"
+          },
+          "citra": {
+            "items": {
+              "$ref": "#/components/schemas/Citra"
+            },
+            "type": "array",
+            "title": "Citra"
+          },
+          "verifikasi": {
+            "$ref": "#/components/schemas/VerifikasiCitra"
+          },
+          "sumber_placeholder": {
+            "type": "boolean",
+            "title": "Sumber Placeholder",
+            "description": "TRUE selama model YOLO belum terpasang dan hasil berasal dari pengklasifikasi tiruan. Lihat modules/classification/pengklasifikasi_mock.py."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_klasifikasi",
+          "komoditas",
+          "pemicu",
+          "jenis_kondisi",
+          "tingkat_keparahan",
+          "skor_keyakinan",
+          "metode_klasifikasi",
+          "label_bahasa",
+          "penjelasan",
+          "butuh_konfirmasi_manual",
+          "tindakan_disarankan",
+          "verifikasi",
+          "sumber_placeholder"
+        ],
+        "title": "KlasifikasiResponse"
+      },
+      "Komoditas": {
+        "type": "string",
+        "enum": [
+          "tomat",
+          "kentang",
+          "wortel",
+          "jagung",
+          "daun"
+        ],
+        "title": "Komoditas",
+        "description": "PRD B-03. `daun` is oversupply-only -- see `kombinasi_valid` below."
+      },
+      "KondisiKode": {
+        "type": "string",
+        "enum": [
+          "K0",
+          "K1",
+          "K2",
+          "K3",
+          "K4",
+          "K5",
+          "K6"
+        ],
+        "title": "KondisiKode",
+        "description": "PRD §11 condition taxonomy."
+      },
+      "KondisiPenyimpanan": {
+        "type": "string",
+        "enum": [
+          "terbuka",
+          "tertutup",
+          "berpendingin"
+        ],
+        "title": "KondisiPenyimpanan"
+      },
+      "Koordinat": {
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "latitude",
+          "longitude"
+        ],
+        "title": "Koordinat",
+        "description": "PRD §8 GeoPoint."
+      },
+      "LaporanResponse": {
+        "properties": {
+          "id_laporan": {
+            "type": "string",
+            "title": "Id Laporan"
+          },
+          "id_transaksi": {
+            "type": "string",
+            "title": "Id Transaksi"
+          },
+          "id_pelapor": {
+            "type": "string",
+            "title": "Id Pelapor"
+          },
+          "id_terlapor": {
+            "type": "string",
+            "title": "Id Terlapor"
+          },
+          "kondisi_diklaim": {
+            "items": {
+              "$ref": "#/components/schemas/KondisiKode"
+            },
+            "type": "array",
+            "title": "Kondisi Diklaim"
+          },
+          "kondisi_ditemukan": {
+            "items": {
+              "$ref": "#/components/schemas/KondisiKode"
+            },
+            "type": "array",
+            "title": "Kondisi Ditemukan"
+          },
+          "catatan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catatan"
+          },
+          "foto_pembanding": {
+            "items": {
+              "$ref": "#/components/schemas/Citra"
+            },
+            "type": "array",
+            "title": "Foto Pembanding"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusLaporan"
+          },
+          "waktu_dibuat": {
+            "type": "string",
+            "title": "Waktu Dibuat"
+          },
+          "keterangan_dampak": {
+            "type": "string",
+            "title": "Keterangan Dampak"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_laporan",
+          "id_transaksi",
+          "id_pelapor",
+          "id_terlapor",
+          "kondisi_diklaim",
+          "kondisi_ditemukan",
+          "status",
+          "waktu_dibuat",
+          "keterangan_dampak"
+        ],
+        "title": "LaporanResponse"
+      },
+      "MetodeKlasifikasi": {
+        "type": "string",
+        "enum": [
+          "otomatis",
+          "manual_dilaporkan_sendiri"
+        ],
+        "title": "MetodeKlasifikasi",
+        "description": "PRD B-07/F-03: self-reported listings stay visibly distinguishable."
+      },
+      "NilaiEstimasi": {
+        "properties": {
+          "min": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Min"
+          },
+          "max": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Max"
+          },
+          "satuan": {
+            "type": "string",
+            "title": "Satuan",
+            "default": "Rp/kg"
+          }
+        },
+        "type": "object",
+        "required": [
+          "min",
+          "max"
+        ],
+        "title": "NilaiEstimasi",
+        "description": "PRD C-02: estimated value range.\n\nProduce value per kg. Never net-of-transport -- transport cost modelling\nis out of scope (PRD §3.2)."
+      },
+      "NotifikasiResponse": {
+        "properties": {
+          "id_notifikasi": {
+            "type": "string",
+            "title": "Id Notifikasi"
+          },
+          "jenis": {
+            "type": "string",
+            "title": "Jenis"
+          },
+          "judul": {
+            "type": "string",
+            "title": "Judul"
+          },
+          "isi": {
+            "type": "string",
+            "title": "Isi"
+          },
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
+          },
+          "mendesak": {
+            "type": "boolean",
+            "title": "Mendesak"
+          },
+          "status_kirim": {
+            "type": "string",
+            "title": "Status Kirim",
+            "description": "'tercatat' selama pengiriman push masih placeholder -- notifikasi tersimpan dan dapat dibaca lewat API, tapi tidak dikirim ke perangkat. Lihat modules/notifications/pengirim.py."
+          },
+          "waktu_dibuat": {
+            "type": "string",
+            "title": "Waktu Dibuat"
+          },
+          "waktu_dibaca": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waktu Dibaca"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_notifikasi",
+          "jenis",
+          "judul",
+          "isi",
+          "mendesak",
+          "status_kirim",
+          "waktu_dibuat"
+        ],
+        "title": "NotifikasiResponse"
+      },
+      "Opsi": {
+        "properties": {
+          "nama": {
+            "type": "string",
+            "title": "Nama"
+          },
+          "prioritas": {
+            "type": "integer",
+            "maximum": 99.0,
+            "minimum": 1.0,
+            "title": "Prioritas"
+          },
+          "nilai_estimasi": {
+            "$ref": "#/components/schemas/NilaiEstimasi"
+          },
+          "tingkat_upaya": {
+            "$ref": "#/components/schemas/TingkatUpaya"
+          },
+          "jenis_usaha_pembeli": {
+            "items": {
+              "$ref": "#/components/schemas/JenisUsaha"
+            },
+            "type": "array",
+            "title": "Jenis Usaha Pembeli"
+          },
+          "butuh_kesegaran": {
+            "type": "boolean",
+            "title": "Butuh Kesegaran",
+            "default": false
+          },
+          "catatan": {
+            "type": "string",
+            "title": "Catatan",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "nama",
+          "prioritas",
+          "nilai_estimasi",
+          "tingkat_upaya"
+        ],
+        "title": "Opsi",
+        "description": "One disposal/sale option (PRD C-02)."
+      },
+      "OpsiRekomendasi": {
+        "properties": {
+          "nama": {
+            "type": "string",
+            "title": "Nama"
+          },
+          "nilai_estimasi": {
+            "$ref": "#/components/schemas/NilaiEstimasi"
+          },
+          "tingkat_upaya": {
+            "$ref": "#/components/schemas/TingkatUpaya"
+          },
+          "catatan": {
+            "type": "string",
+            "title": "Catatan"
+          },
+          "jenis_usaha_pembeli": {
+            "items": {
+              "$ref": "#/components/schemas/JenisUsaha"
+            },
+            "type": "array",
+            "title": "Jenis Usaha Pembeli"
+          },
+          "ketersediaan_pembeli": {
+            "$ref": "#/components/schemas/KetersediaanPembeli"
+          },
+          "keterangan_pembeli": {
+            "type": "string",
+            "title": "Keterangan Pembeli"
+          },
+          "id_aturan": {
+            "type": "string",
+            "title": "Id Aturan"
+          },
+          "dasar_aturan": {
+            "type": "string",
+            "title": "Dasar Aturan"
+          },
+          "penyesuaian": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Penyesuaian"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nama",
+          "nilai_estimasi",
+          "tingkat_upaya",
+          "catatan",
+          "ketersediaan_pembeli",
+          "keterangan_pembeli",
+          "id_aturan",
+          "dasar_aturan"
+        ],
+        "title": "OpsiRekomendasi",
+        "description": "One recommendation shown to a farmer (PRD C-02, C-03)."
+      },
+      "PapanKomunitasResponse": {
+        "properties": {
+          "wilayah": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Wilayah"
+          },
+          "penawaran_aktif": {
+            "items": {
+              "$ref": "#/components/schemas/PenawaranRingkasPapan"
+            },
+            "type": "array",
+            "title": "Penawaran Aktif"
+          },
+          "pos": {
+            "items": {
+              "$ref": "#/components/schemas/PosKomunitas"
+            },
+            "type": "array",
+            "title": "Pos"
+          },
+          "catatan": {
+            "type": "string",
+            "title": "Catatan",
+            "default": "Papan ini bersifat informasi dan koordinasi saja. Terra tidak menggabungkan pengiriman antar petani dan tidak menghitung biaya angkut (PRD G-04, §3.2)."
+          }
+        },
+        "type": "object",
+        "title": "PapanKomunitasResponse"
+      },
+      "PembeliCocok": {
+        "properties": {
+          "id_permintaan": {
+            "type": "string",
+            "title": "Id Permintaan"
+          },
+          "id_pembeli": {
+            "type": "string",
+            "title": "Id Pembeli"
+          },
+          "nama": {
+            "type": "string",
+            "title": "Nama"
+          },
+          "nama_usaha": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nama Usaha"
+          },
+          "jenis_usaha": {
+            "$ref": "#/components/schemas/JenisUsaha"
+          },
+          "alamat_umum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alamat Umum"
+          },
+          "jarak_km": {
+            "type": "number",
+            "title": "Jarak Km",
+            "description": "Haversine, PRD D-01."
+          },
+          "skor_relevansi": {
+            "type": "number",
+            "title": "Skor Relevansi"
+          },
+          "alasan": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Alasan"
+          },
+          "volume_dibutuhkan": {
+            "type": "number",
+            "title": "Volume Dibutuhkan"
+          },
+          "volume_minimum": {
+            "type": "number",
+            "title": "Volume Minimum"
+          },
+          "keparahan_maksimal": {
+            "$ref": "#/components/schemas/TingkatKeparahan"
+          },
+          "rentang_harga": {
+            "$ref": "#/components/schemas/RentangHarga"
+          },
+          "reputasi": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RingkasanReputasi"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tautan_whatsapp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tautan Whatsapp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_permintaan",
+          "id_pembeli",
+          "nama",
+          "jenis_usaha",
+          "jarak_km",
+          "skor_relevansi",
+          "alasan",
+          "volume_dibutuhkan",
+          "volume_minimum",
+          "keparahan_maksimal",
+          "rentang_harga"
+        ],
+        "title": "PembeliCocok",
+        "description": "One ranked buyer in the forward flow (PRD D-03 … D-06)."
+      },
+      "Pemicu": {
+        "type": "string",
+        "enum": [
+          "cacat_mutu",
+          "kelebihan_pasokan"
+        ],
+        "title": "Pemicu",
+        "description": "PRD B-04: what prompted the listing."
+      },
+      "PenawaranResponse": {
+        "properties": {
+          "id_penawaran": {
+            "type": "string",
+            "title": "Id Penawaran"
+          },
+          "id_petani": {
+            "type": "string",
+            "title": "Id Petani"
+          },
+          "pemicu": {
+            "$ref": "#/components/schemas/Pemicu"
+          },
+          "komoditas": {
+            "$ref": "#/components/schemas/Komoditas"
+          },
+          "jenis_kondisi": {
+            "items": {
+              "$ref": "#/components/schemas/KondisiKode"
+            },
+            "type": "array",
+            "title": "Jenis Kondisi"
+          },
+          "tingkat_keparahan": {
+            "$ref": "#/components/schemas/TingkatKeparahan"
+          },
+          "skor_keyakinan": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skor Keyakinan"
+          },
+          "metode_klasifikasi": {
+            "$ref": "#/components/schemas/MetodeKlasifikasi"
+          },
+          "dilaporkan_sendiri": {
+            "type": "boolean",
+            "title": "Dilaporkan Sendiri"
+          },
+          "volume": {
+            "type": "number",
+            "title": "Volume"
+          },
+          "lama_sejak_panen": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lama Sejak Panen"
+          },
+          "kondisi_penyimpanan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/KondisiPenyimpanan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sisa_jendela_hari": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sisa Jendela Hari",
+            "description": "Perkiraan sisa hari layak salur (H-02)."
+          },
+          "mendesak": {
+            "type": "boolean",
+            "title": "Mendesak"
+          },
+          "keterangan_jendela": {
+            "type": "string",
+            "title": "Keterangan Jendela"
+          },
+          "koordinat": {
+            "$ref": "#/components/schemas/Koordinat"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusPenawaran"
+          },
+          "citra": {
+            "items": {
+              "$ref": "#/components/schemas/Citra"
+            },
+            "type": "array",
+            "title": "Citra"
+          },
+          "jumlah_permintaan_cocok": {
+            "type": "integer",
+            "title": "Jumlah Permintaan Cocok",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_penawaran",
+          "id_petani",
+          "pemicu",
+          "komoditas",
+          "jenis_kondisi",
+          "tingkat_keparahan",
+          "skor_keyakinan",
+          "metode_klasifikasi",
+          "dilaporkan_sendiri",
+          "volume",
+          "mendesak",
+          "keterangan_jendela",
+          "koordinat",
+          "status"
+        ],
+        "title": "PenawaranResponse"
+      },
+      "PenawaranRingkasPapan": {
+        "properties": {
+          "id_penawaran": {
+            "type": "string",
+            "title": "Id Penawaran"
+          },
+          "komoditas": {
+            "$ref": "#/components/schemas/Komoditas"
+          },
+          "volume_kg": {
+            "type": "number",
+            "title": "Volume Kg"
+          },
+          "kondisi": {
+            "type": "string",
+            "title": "Kondisi"
+          },
+          "lokasi_umum": {
+            "type": "string",
+            "title": "Lokasi Umum"
+          },
+          "mendesak": {
+            "type": "boolean",
+            "title": "Mendesak"
+          },
+          "dilaporkan_sendiri": {
+            "type": "boolean",
+            "title": "Dilaporkan Sendiri"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_penawaran",
+          "komoditas",
+          "volume_kg",
+          "kondisi",
+          "lokasi_umum",
+          "mendesak",
+          "dilaporkan_sendiri"
+        ],
+        "title": "PenawaranRingkasPapan",
+        "description": "An active offer as it appears on the board -- coarse by design."
+      },
+      "PendaftaranResponse": {
+        "properties": {
+          "id_pengguna": {
+            "type": "string",
+            "title": "Id Pengguna"
+          },
+          "nama": {
+            "type": "string",
+            "title": "Nama"
+          },
+          "peran": {
+            "$ref": "#/components/schemas/Peran"
+          },
+          "koordinat": {
+            "$ref": "#/components/schemas/Koordinat"
+          },
+          "alamat_umum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alamat Umum"
+          },
+          "nomor_whatsapp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nomor Whatsapp"
+          },
+          "komoditas_utama": {
+            "items": {
+              "$ref": "#/components/schemas/Komoditas"
+            },
+            "type": "array",
+            "title": "Komoditas Utama"
+          },
+          "jenis_usaha": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JenisUsaha"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nama_usaha": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nama Usaha"
+          },
+          "reputasi": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RingkasanReputasi"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "token_akses": {
+            "type": "string",
+            "title": "Token Akses"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_pengguna",
+          "nama",
+          "peran",
+          "koordinat",
+          "token_akses"
+        ],
+        "title": "PendaftaranResponse",
+        "description": "Registration also hands back the MVP access token.\n\nReturning a credential in a response body is fine for this build and not\nfor a real one -- see terra/core/security.py."
+      },
+      "Peran": {
+        "type": "string",
+        "enum": [
+          "petani",
+          "pembeli"
+        ],
+        "title": "Peran",
+        "description": "PRD A-01: role chosen at signup."
+      },
+      "PerbaruiLokasiRequest": {
+        "properties": {
+          "koordinat": {
+            "$ref": "#/components/schemas/Koordinat"
+          },
+          "alamat_umum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alamat Umum"
+          }
+        },
+        "type": "object",
+        "required": [
+          "koordinat"
+        ],
+        "title": "PerbaruiLokasiRequest"
+      },
+      "PermintaanResponse": {
+        "properties": {
+          "id_permintaan": {
+            "type": "string",
+            "title": "Id Permintaan"
+          },
+          "id_pembeli": {
+            "type": "string",
+            "title": "Id Pembeli"
+          },
+          "jenis_usaha": {
+            "$ref": "#/components/schemas/JenisUsaha"
+          },
+          "komoditas_dicari": {
+            "items": {
+              "$ref": "#/components/schemas/Komoditas"
+            },
+            "type": "array",
+            "title": "Komoditas Dicari"
+          },
+          "kondisi_diterima": {
+            "items": {
+              "$ref": "#/components/schemas/KondisiKode"
+            },
+            "type": "array",
+            "title": "Kondisi Diterima"
+          },
+          "keparahan_maksimal": {
+            "$ref": "#/components/schemas/TingkatKeparahan"
+          },
+          "volume_minimum": {
+            "type": "number",
+            "title": "Volume Minimum"
+          },
+          "volume_dibutuhkan": {
+            "type": "number",
+            "title": "Volume Dibutuhkan"
+          },
+          "radius_maksimal": {
+            "type": "integer",
+            "title": "Radius Maksimal"
+          },
+          "rentang_harga": {
+            "$ref": "#/components/schemas/RentangHarga"
+          },
+          "koordinat": {
+            "$ref": "#/components/schemas/Koordinat"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusPermintaan"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_permintaan",
+          "id_pembeli",
+          "jenis_usaha",
+          "komoditas_dicari",
+          "kondisi_diterima",
+          "keparahan_maksimal",
+          "volume_minimum",
+          "volume_dibutuhkan",
+          "radius_maksimal",
+          "rentang_harga",
+          "koordinat",
+          "status"
+        ],
+        "title": "PermintaanResponse"
+      },
+      "PosKomunitas": {
+        "properties": {
+          "id_pos": {
+            "type": "string",
+            "title": "Id Pos"
+          },
+          "id_penulis": {
+            "type": "string",
+            "title": "Id Penulis"
+          },
+          "nama_penulis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nama Penulis"
+          },
+          "wilayah": {
+            "type": "string",
+            "title": "Wilayah"
+          },
+          "isi": {
+            "type": "string",
+            "title": "Isi"
+          },
+          "waktu_dibuat": {
+            "type": "string",
+            "title": "Waktu Dibuat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_pos",
+          "id_penulis",
+          "wilayah",
+          "isi",
+          "waktu_dibuat"
+        ],
+        "title": "PosKomunitas"
+      },
+      "ProfilResponse": {
+        "properties": {
+          "id_pengguna": {
+            "type": "string",
+            "title": "Id Pengguna"
+          },
+          "nama": {
+            "type": "string",
+            "title": "Nama"
+          },
+          "peran": {
+            "$ref": "#/components/schemas/Peran"
+          },
+          "koordinat": {
+            "$ref": "#/components/schemas/Koordinat"
+          },
+          "alamat_umum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alamat Umum"
+          },
+          "nomor_whatsapp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nomor Whatsapp"
+          },
+          "komoditas_utama": {
+            "items": {
+              "$ref": "#/components/schemas/Komoditas"
+            },
+            "type": "array",
+            "title": "Komoditas Utama"
+          },
+          "jenis_usaha": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JenisUsaha"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nama_usaha": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nama Usaha"
+          },
+          "reputasi": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RingkasanReputasi"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_pengguna",
+          "nama",
+          "peran",
+          "koordinat"
+        ],
+        "title": "ProfilResponse"
+      },
+      "RekomendasiResponse": {
+        "properties": {
+          "id_penawaran": {
+            "type": "string",
+            "title": "Id Penawaran"
+          },
+          "komoditas": {
+            "$ref": "#/components/schemas/Komoditas"
+          },
+          "jenis_kondisi": {
+            "items": {
+              "$ref": "#/components/schemas/KondisiKode"
+            },
+            "type": "array",
+            "title": "Jenis Kondisi"
+          },
+          "tingkat_keparahan": {
+            "$ref": "#/components/schemas/TingkatKeparahan"
+          },
+          "sisa_jendela_hari": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sisa Jendela Hari"
+          },
+          "opsi": {
+            "items": {
+              "$ref": "#/components/schemas/OpsiRekomendasi"
+            },
+            "type": "array",
+            "title": "Opsi"
+          },
+          "catatan": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catatan"
+          },
+          "versi_basis_aturan": {
+            "type": "integer",
+            "title": "Versi Basis Aturan"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_penawaran",
+          "komoditas",
+          "jenis_kondisi",
+          "tingkat_keparahan",
+          "versi_basis_aturan"
+        ],
+        "title": "RekomendasiResponse"
+      },
+      "RentangHarga": {
+        "properties": {
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "satuan": {
+            "type": "string",
+            "title": "Satuan",
+            "default": "Rp/kg"
+          }
+        },
+        "type": "object",
+        "title": "RentangHarga",
+        "description": "PRD E-01 `rentang_harga`.\n\nThe price a buyer offers per kg OF PRODUCE. Not a shipping rate, not a\nnet-of-transport figure -- transport cost modelling is out of scope\n(PRD §3.2)."
+      },
+      "RincianKomoditas": {
+        "properties": {
+          "komoditas": {
+            "$ref": "#/components/schemas/Komoditas"
+          },
+          "volume_kg": {
+            "type": "number",
+            "title": "Volume Kg"
+          },
+          "nilai_rupiah": {
+            "type": "number",
+            "title": "Nilai Rupiah"
+          },
+          "jumlah_transaksi": {
+            "type": "integer",
+            "title": "Jumlah Transaksi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "komoditas",
+          "volume_kg",
+          "nilai_rupiah",
+          "jumlah_transaksi"
+        ],
+        "title": "RincianKomoditas"
+      },
+      "RingkasanKlasifikasi": {
+        "properties": {
+          "id_klasifikasi": {
+            "type": "string",
+            "title": "Id Klasifikasi"
+          },
+          "komoditas": {
+            "$ref": "#/components/schemas/Komoditas"
+          },
+          "pemicu": {
+            "$ref": "#/components/schemas/Pemicu"
+          },
+          "jenis_kondisi": {
+            "items": {
+              "$ref": "#/components/schemas/KondisiKode"
+            },
+            "type": "array",
+            "title": "Jenis Kondisi"
+          },
+          "tingkat_keparahan": {
+            "$ref": "#/components/schemas/TingkatKeparahan"
+          },
+          "skor_keyakinan": {
+            "type": "number",
+            "title": "Skor Keyakinan"
+          },
+          "metode_klasifikasi": {
+            "$ref": "#/components/schemas/MetodeKlasifikasi"
+          },
+          "label_bahasa": {
+            "type": "string",
+            "title": "Label Bahasa"
+          },
+          "butuh_konfirmasi_manual": {
+            "type": "boolean",
+            "title": "Butuh Konfirmasi Manual"
+          },
+          "citra": {
+            "items": {
+              "$ref": "#/components/schemas/Citra"
+            },
+            "type": "array",
+            "title": "Citra"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_klasifikasi",
+          "komoditas",
+          "pemicu",
+          "jenis_kondisi",
+          "tingkat_keparahan",
+          "skor_keyakinan",
+          "metode_klasifikasi",
+          "label_bahasa",
+          "butuh_konfirmasi_manual"
+        ],
+        "title": "RingkasanKlasifikasi",
+        "description": "What `classification` publishes to whoever turns a run into an offer."
+      },
+      "RingkasanPengguna": {
+        "properties": {
+          "id_pengguna": {
+            "type": "string",
+            "title": "Id Pengguna"
+          },
+          "nama": {
+            "type": "string",
+            "title": "Nama"
+          },
+          "peran": {
+            "$ref": "#/components/schemas/Peran"
+          },
+          "koordinat": {
+            "$ref": "#/components/schemas/Koordinat"
+          },
+          "alamat_umum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alamat Umum"
+          },
+          "nomor_whatsapp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nomor Whatsapp"
+          },
+          "jenis_usaha": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JenisUsaha"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "nama_usaha": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nama Usaha"
+          },
+          "komoditas_utama": {
+            "items": {
+              "$ref": "#/components/schemas/Komoditas"
+            },
+            "type": "array",
+            "title": "Komoditas Utama"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_pengguna",
+          "nama",
+          "peran",
+          "koordinat"
+        ],
+        "title": "RingkasanPengguna",
+        "description": "What `onboarding` publishes about a user to other modules."
+      },
+      "RingkasanReputasi": {
+        "properties": {
+          "id_pengguna": {
+            "type": "string",
+            "title": "Id Pengguna"
+          },
+          "peran": {
+            "$ref": "#/components/schemas/Peran"
+          },
+          "jumlah_transaksi": {
+            "type": "integer",
+            "title": "Jumlah Transaksi",
+            "default": 0
+          },
+          "skor_rata_rata": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skor Rata Rata"
+          },
+          "jumlah_laporan_ketidaksesuaian": {
+            "type": "integer",
+            "title": "Jumlah Laporan Ketidaksesuaian",
+            "default": 0
+          },
+          "jumlah_pembatalan_sepihak": {
+            "type": "integer",
+            "title": "Jumlah Pembatalan Sepihak",
+            "default": 0
+          },
+          "tingkat_akurasi_deskripsi": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tingkat Akurasi Deskripsi"
+          },
+          "ringkasan_teks": {
+            "type": "string",
+            "title": "Ringkasan Teks",
+            "default": "Belum ada riwayat transaksi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_pengguna",
+          "peran"
+        ],
+        "title": "RingkasanReputasi",
+        "description": "What `trust` publishes about a user (PRD F-05, F-06, F-07, D-05)."
+      },
+      "RingkasanTransaksi": {
+        "properties": {
+          "id_transaksi": {
+            "type": "string",
+            "title": "Id Transaksi"
+          },
+          "id_penawaran": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id Penawaran"
+          },
+          "id_petani": {
+            "type": "string",
+            "title": "Id Petani"
+          },
+          "id_pembeli": {
+            "type": "string",
+            "title": "Id Pembeli"
+          },
+          "komoditas": {
+            "$ref": "#/components/schemas/Komoditas"
+          },
+          "volume": {
+            "type": "number",
+            "title": "Volume"
+          },
+          "nilai_total": {
+            "type": "number",
+            "title": "Nilai Total"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusTransaksi"
+          },
+          "waktu_selesai": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Waktu Selesai"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_transaksi",
+          "id_penawaran",
+          "id_petani",
+          "id_pembeli",
+          "komoditas",
+          "volume",
+          "nilai_total",
+          "status"
+        ],
+        "title": "RingkasanTransaksi",
+        "description": "What `trust` publishes about a completed deal (dashboard reads these)."
+      },
+      "SelesaikanTransaksiRequest": {
+        "properties": {
+          "rating_untuk_petani": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating Untuk Petani"
+          },
+          "rating_untuk_pembeli": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating Untuk Pembeli"
+          },
+          "nilai_total": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nilai Total",
+            "description": "Koreksi nilai akhir bila berbeda dari kesepakatan."
+          }
+        },
+        "type": "object",
+        "title": "SelesaikanTransaksiRequest",
+        "description": "PRD §10.1 step 8: both parties rate each other."
+      },
+      "StatusLaporan": {
+        "type": "string",
+        "enum": [
+          "menunggu",
+          "terkonfirmasi",
+          "ditolak"
+        ],
+        "title": "StatusLaporan"
+      },
+      "StatusPenawaran": {
+        "type": "string",
+        "enum": [
+          "baru",
+          "dicocokkan",
+          "tersalurkan",
+          "kedaluwarsa"
+        ],
+        "title": "StatusPenawaran"
+      },
+      "StatusPermintaan": {
+        "type": "string",
+        "enum": [
+          "aktif",
+          "terpenuhi",
+          "kedaluwarsa"
+        ],
+        "title": "StatusPermintaan"
+      },
+      "StatusTransaksi": {
+        "type": "string",
+        "enum": [
+          "disepakati",
+          "selesai",
+          "dibatalkan_pembeli",
+          "dibatalkan_petani"
+        ],
+        "title": "StatusTransaksi"
+      },
+      "TingkatKeparahan": {
+        "type": "string",
+        "enum": [
+          "tidak_ada",
+          "ringan",
+          "sedang",
+          "berat"
+        ],
+        "title": "TingkatKeparahan"
+      },
+      "TingkatUpaya": {
+        "type": "string",
+        "enum": [
+          "rendah",
+          "sedang",
+          "tinggi"
+        ],
+        "title": "TingkatUpaya",
+        "description": "PRD C-02: how much work a recommendation asks of the farmer."
+      },
+      "TinjauLaporanRequest": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/StatusLaporan",
+            "description": "terkonfirmasi atau ditolak. Hanya laporan terkonfirmasi yang memengaruhi skor."
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "TinjauLaporanRequest"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VerifikasiCitra": {
+        "properties": {
+          "metadata_lengkap": {
+            "type": "boolean",
+            "title": "Metadata Lengkap",
+            "description": "Waktu ambil dan koordinat tersedia untuk setiap foto (B-02)."
+          },
+          "geotag_mencurigakan": {
+            "type": "boolean",
+            "title": "Geotag Mencurigakan",
+            "description": "Geotag jauh dari lokasi terdaftar petani (F-02). Ditandai untuk ditinjau, bukan ditolak."
+          },
+          "jarak_dari_lokasi_terdaftar_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jarak Dari Lokasi Terdaftar Km"
+          },
+          "catatan": {
+            "type": "string",
+            "title": "Catatan"
+          }
+        },
+        "type": "object",
+        "required": [
+          "metadata_lengkap",
+          "geotag_mencurigakan",
+          "catatan"
+        ],
+        "title": "VerifikasiCitra",
+        "description": "Trust signals attached to a classification (PRD F-01, F-02).\n\nServer-side verification can only go so far: the backend cannot prove a\nphoto came from the in-app camera rather than the gallery. What it can do\nis check that the capture metadata PRD B-02 requires is actually present,\nand compare the geotag against the farmer's registered location. Both\noutcomes are reported, never silently swallowed."
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "description": "Token pengguna. Data demo: `demo-petani-1`, `demo-petani-2`, `demo-pembeli-1` … `demo-pembeli-6`.",
+        "in": "header",
+        "name": "X-Terra-Token"
+      }
+    }
+  }
+}
