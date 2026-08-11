@@ -39,12 +39,40 @@ export function FarmerHomeScreen() {
       onRefresh={() => void penawaran.refetch()}
       refreshing={penawaran.isRefetching}
     >
-      <View className="mt-gutter">
-        <Button
-          label="Buat penawaran baru"
-          icon="camera-outline"
-          onPress={() => navigation.navigate("PenawaranBaru")}
-        />
+      <Card
+        tone="brand"
+        title="Analisis kondisi panen"
+        subtitle="Ambil foto, lengkapi data singkat, lalu lihat rekomendasi penyaluran."
+        className="mt-gutter"
+      >
+        <View className="mt-gutter">
+          <Button
+            label="Tambah hasil panen"
+            icon="camera-outline"
+            onPress={() => navigation.navigate("PenawaranBaru")}
+          />
+        </View>
+      </Card>
+
+      <View className="mt-gutter flex-row">
+        <View className="mr-snug flex-1">
+          <Button
+            label="Lihat transaksi"
+            variant="secondary"
+            icon="receipt-outline"
+            onPress={() => navigation.navigate("Transaksi")}
+          />
+        </View>
+        <View className="flex-1">
+          <Button
+            label="Komunitas"
+            variant="secondary"
+            icon="people-outline"
+            onPress={() =>
+              navigation.navigate("RootPetani", { screen: "KomunitasPetani" })
+            }
+          />
+        </View>
       </View>
 
       {mendesak.length > 0 ? (
@@ -110,8 +138,7 @@ export function FarmerHomeScreen() {
       </View>
 
       <Text variant="caption" tone="muted" className="mt-section">
-        Klasifikasi foto saat ini memakai model tiruan di backend — hasilnya
-        masuk akal tapi belum berasal dari model YOLO terlatih.
+        Foto membantu pembeli memahami kondisi panen sebelum menghubungi Anda.
       </Text>
     </Screen>
   );

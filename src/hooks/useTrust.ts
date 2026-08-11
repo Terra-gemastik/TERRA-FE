@@ -1,19 +1,27 @@
 /** Trust & verification — PRD Epic F. */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 
 import { trust } from "@/api/endpoints";
 import type {
   BuatLaporanRequest,
   BuatTransaksiRequest,
+  LaporanResponse,
+  RingkasanReputasi,
+  RingkasanTransaksi,
   SelesaikanTransaksiRequest,
   TinjauLaporanRequest,
 } from "@/api/types";
 
 import { kunci } from "./keys";
 
-export function useTransaksiSaya() {
-  return useQuery({
+export function useTransaksiSaya(): UseQueryResult<RingkasanTransaksi[]> {
+  return useQuery<RingkasanTransaksi[]>({
     queryKey: kunci.trust.transaksi,
     queryFn: () => trust.transaksiSaya(),
   });
@@ -25,16 +33,20 @@ export function useTransaksiSaya() {
  * `ringkasan_teks` states what the numbers are derived from; screens show it
  * next to the figures so a score is never an unexplained rating.
  */
-export function useReputasi(idPengguna: string | undefined) {
-  return useQuery({
+export function useReputasi(
+  idPengguna: string | undefined,
+): UseQueryResult<RingkasanReputasi> {
+  return useQuery<RingkasanReputasi>({
     queryKey: kunci.trust.reputasi(idPengguna ?? ""),
     queryFn: () => trust.reputasi(idPengguna!),
     enabled: Boolean(idPengguna),
   });
 }
 
-export function useLaporanTerhadap(idPengguna: string | undefined) {
-  return useQuery({
+export function useLaporanTerhadap(
+  idPengguna: string | undefined,
+): UseQueryResult<LaporanResponse[]> {
+  return useQuery<LaporanResponse[]>({
     queryKey: kunci.trust.laporan(idPengguna ?? ""),
     queryFn: () => trust.laporanTerhadap(idPengguna!),
     enabled: Boolean(idPengguna),

@@ -121,27 +121,34 @@ export function NewOfferScreen() {
   return (
     <Screen>
       <Stack className="mt-gutter">
-        <Select<Komoditas>
-          label="Komoditas"
-          value={komoditas}
-          onChange={setKomoditas}
-          options={OPSI_KOMODITAS.map((k) => ({
-            value: k,
-            label: LABEL_KOMODITAS[k],
-          }))}
-        />
+        <Card
+          title="Informasi hasil panen"
+          subtitle="Pilih komoditas dan alasan panen perlu disalurkan."
+        >
+          <Stack gap="gutter" className="mt-gutter">
+            <Select<Komoditas>
+              label="Komoditas"
+              value={komoditas}
+              onChange={setKomoditas}
+              options={OPSI_KOMODITAS.map((k) => ({
+                value: k,
+                label: LABEL_KOMODITAS[k],
+              }))}
+            />
 
-        <Select<Pemicu>
-          label="Apa yang terjadi?"
-          value={pemicu}
-          onChange={setPemicu}
-          options={OPSI_PEMICU.map((p) => ({
-            value: p,
-            label: LABEL_PEMICU[p],
-            description: KETERANGAN_PEMICU[p],
-          }))}
-          error={kombinasiSalah ? ALASAN_KOMBINASI_TIDAK_VALID : null}
-        />
+            <Select<Pemicu>
+              label="Apa yang terjadi?"
+              value={pemicu}
+              onChange={setPemicu}
+              options={OPSI_PEMICU.map((p) => ({
+                value: p,
+                label: LABEL_PEMICU[p],
+                description: KETERANGAN_PEMICU[p],
+              }))}
+              error={kombinasiSalah ? ALASAN_KOMBINASI_TIDAK_VALID : null}
+            />
+          </Stack>
+        </Card>
 
         <Card
           title="Foto panen"
@@ -191,35 +198,45 @@ export function NewOfferScreen() {
           </View>
         </Card>
 
-        <TextField
-          label="Perkiraan volume"
-          value={volume}
-          onChangeText={setVolume}
-          placeholder="120"
-          keyboardType="numeric"
-          suffix="kg"
-        />
+        <Card title="Informasi penjualan" subtitle="Volume wajib diisi agar pembeli bisa menghitung kebutuhan.">
+          <TextField
+            label="Perkiraan volume"
+            value={volume}
+            onChangeText={setVolume}
+            placeholder="120"
+            keyboardType="numeric"
+            suffix="kg"
+            className="mt-gutter"
+          />
+        </Card>
 
-        <TextField
-          label="Sudah berapa hari sejak panen? (opsional)"
-          value={lamaPanen}
-          onChangeText={setLamaPanen}
-          placeholder="1"
-          keyboardType="numeric"
-          suffix="hari"
-          helper="Dipakai untuk memperkirakan sisa umur simpan."
-        />
+        <Card
+          title="Informasi penyimpanan"
+          subtitle="Opsional, dipakai untuk memperkirakan sisa umur simpan."
+        >
+          <Stack gap="gutter" className="mt-gutter">
+            <TextField
+              label="Sudah berapa hari sejak panen? (opsional)"
+              value={lamaPanen}
+              onChangeText={setLamaPanen}
+              placeholder="1"
+              keyboardType="numeric"
+              suffix="hari"
+              helper="Dipakai untuk memperkirakan sisa umur simpan."
+            />
 
-        <Select<KondisiPenyimpanan>
-          label="Kondisi penyimpanan (opsional)"
-          value={penyimpanan}
-          onChange={setPenyimpanan}
-          options={OPSI_PENYIMPANAN.map((k) => ({
-            value: k,
-            label: LABEL_PENYIMPANAN[k],
-          }))}
-          helper="Bersama lama sejak panen, ini menentukan penanda mendesak."
-        />
+            <Select<KondisiPenyimpanan>
+              label="Kondisi penyimpanan (opsional)"
+              value={penyimpanan}
+              onChange={setPenyimpanan}
+              options={OPSI_PENYIMPANAN.map((k) => ({
+                value: k,
+                label: LABEL_PENYIMPANAN[k],
+              }))}
+              helper="Bersama lama sejak panen, ini menentukan penanda mendesak."
+            />
+          </Stack>
+        </Card>
 
         {galat ? <ErrorState error={galat} title="Klasifikasi gagal" /> : null}
 

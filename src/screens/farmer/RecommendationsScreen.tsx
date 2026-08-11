@@ -75,23 +75,39 @@ export function RecommendationsScreen() {
         >
           <Stack gap="snug">
             {opsi.map((o) => (
-              <Card key={`${o.id_aturan}-${o.nama}`} title={o.nama}>
-                <View className="mt-snug">
-                  <KeyValue
-                    label="Perkiraan nilai"
-                    value={rentangRupiah(
-                      o.nilai_estimasi.min,
-                      o.nilai_estimasi.max,
-                      `/${o.nilai_estimasi.satuan?.replace("Rp/", "") ?? "kg"}`,
-                    )}
-                  />
+              <Card
+                key={`${o.id_aturan}-${o.nama}`}
+                title={o.nama}
+                aside={<Badge label="Rekomendasi" tone="brand" icon="sparkles-outline" />}
+              >
+                <Text variant="label" tone="secondary" className="mt-gutter">
+                  Estimasi nilai produk
+                </Text>
+                <Text variant="numeric" className="mt-tight">
+                  {rentangRupiah(
+                    o.nilai_estimasi.min,
+                    o.nilai_estimasi.max,
+                    `/${o.nilai_estimasi.satuan?.replace("Rp/", "") ?? "kg"}`,
+                  )}
+                </Text>
+                <Text variant="caption" tone="muted" className="mt-tight">
+                  Belum termasuk ongkos angkut.
+                </Text>
+
+                <View className="mt-gutter">
                   <KeyValue label="Upaya" value={LABEL_UPAYA[o.tingkat_upaya]} />
-                  <KeyValue
-                    label="Ketersediaan pembeli"
-                    value={o.keterangan_pembeli}
-                    tone={o.ketersediaan_pembeli.ada ? "success" : "secondary"}
-                  />
                 </View>
+
+                <Badge
+                  label={`Pembeli: ${o.keterangan_pembeli}`}
+                  tone={o.ketersediaan_pembeli.ada ? "success" : "warning"}
+                  icon={
+                    o.ketersediaan_pembeli.ada
+                      ? "people-outline"
+                      : "alert-circle-outline"
+                  }
+                  className="mt-snug"
+                />
 
                 {o.catatan ? (
                   <Text variant="body-sm" tone="secondary" className="mt-snug">
@@ -139,9 +155,8 @@ export function RecommendationsScreen() {
 
       {rekomendasi.data ? (
         <Text variant="caption" tone="muted" className="mt-gutter">
-          Basis aturan versi {rekomendasi.data.versi_basis_aturan}. Isinya masih
-          berasal dari studi literatur dan belum divalidasi lewat wawancara
-          pembeli.
+          Gunakan pilihan ini sebagai panduan awal, lalu pastikan kembali syarat
+          dan harga dengan pembeli.
         </Text>
       ) : null}
     </Screen>

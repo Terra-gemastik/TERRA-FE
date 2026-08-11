@@ -13,34 +13,36 @@
  */
 
 export const WARNA = {
-  brandPrimary: "#4A5D6E",
-  brandStrong: "#37474F",
-  brandMuted: "#E3E8EB",
+  brandPrimary: "#ABC3C9",
+  brandStrong: "#5F7F87",
+  brandMuted: "#E7F0F1",
+  accentBeige: "#CCBE9F",
+  accentBeigeMuted: "#E9DDBE",
 
-  surface: "#FFFFFF",
-  surfaceSunken: "#F4F5F6",
+  surface: "#FFFCF6",
+  surfaceSunken: "#FAF6EC",
 
-  inkPrimary: "#1B1F23",
-  inkSecondary: "#5A6169",
-  inkMuted: "#8B949C",
-  inkDisabled: "#A8AEB4",
-  inkInverse: "#FFFFFF",
+  inkPrimary: "#382119",
+  inkSecondary: "#6E5B4B",
+  inkMuted: "#8A7B6B",
+  inkDisabled: "#A99F92",
+  inkInverse: "#FFFDF8",
 
-  outline: "#D3D7DB",
-  outlineSubtle: "#E8EAEC",
+  outline: "#D6CDBB",
+  outlineSubtle: "#ECE5D8",
 
-  danger: "#B3261E",
-  dangerInk: "#8C1D18",
-  warningInk: "#6B4B11",
-  successInk: "#175134",
-  infoInk: "#1F4568",
+  danger: "#9D3B32",
+  dangerInk: "#6E231D",
+  warningInk: "#654511",
+  successInk: "#314C38",
+  infoInk: "#314F56",
 } as const;
 
 /** Navigation theme, so headers and tab bars follow the same tokens. */
 export const temaNavigasi = {
   dark: false,
   colors: {
-    primary: WARNA.brandPrimary,
+    primary: WARNA.brandStrong,
     background: WARNA.surfaceSunken,
     card: WARNA.surface,
     text: WARNA.inkPrimary,
@@ -48,9 +50,9 @@ export const temaNavigasi = {
     notification: WARNA.danger,
   },
   fonts: {
-    regular: { fontFamily: "System", fontWeight: "400" as const },
-    medium: { fontFamily: "System", fontWeight: "500" as const },
-    bold: { fontFamily: "System", fontWeight: "700" as const },
-    heavy: { fontFamily: "System", fontWeight: "800" as const },
+    regular: { fontFamily: "Hanken Grotesk", fontWeight: "400" as const },
+    medium: { fontFamily: "Hanken Grotesk", fontWeight: "500" as const },
+    bold: { fontFamily: "Hanken Grotesk", fontWeight: "700" as const },
+    heavy: { fontFamily: "Hanken Grotesk", fontWeight: "800" as const },
   },
 };

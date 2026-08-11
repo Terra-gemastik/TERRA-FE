@@ -1,8 +1,9 @@
 /** Surface container. Optionally pressable, optionally with a header row. */
 
 import type { ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 
+import { MotionPressable } from "./MotionPressable";
 import { Text } from "./Text";
 
 export type CardProps = {
@@ -23,7 +24,7 @@ const NADA_WADAH: Record<NonNullable<CardProps["tone"]>, string> = {
   warning: "bg-warning-surface border-warning",
   success: "bg-success-surface border-success",
   info: "bg-info-surface border-info",
-  brand: "bg-brand-muted border-brand-primary",
+  brand: "bg-brand-primary border-brand-primary",
 };
 
 export function Card({
@@ -62,9 +63,14 @@ export function Card({
 
   if (onPress) {
     return (
-      <Pressable accessibilityRole="button" onPress={onPress} className={kelas}>
+      <MotionPressable
+        accessibilityRole="button"
+        onPress={onPress}
+        pressedScale={0.99}
+        className={kelas}
+      >
         {isi}
-      </Pressable>
+      </MotionPressable>
     );
   }
 

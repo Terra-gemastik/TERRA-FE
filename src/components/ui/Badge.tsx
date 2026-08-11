@@ -23,7 +23,7 @@ export type NadaBadge =
 
 const WADAH: Record<NadaBadge, string> = {
   neutral: "bg-surface-sunken border-outline",
-  brand: "bg-brand-muted border-brand-primary",
+  brand: "bg-brand-muted border-brand-strong",
   danger: "bg-danger-surface border-danger",
   warning: "bg-warning-surface border-warning",
   success: "bg-success-surface border-success",
@@ -41,11 +41,19 @@ const NADA_TEKS: Record<NadaBadge, NadaTeks> = {
 
 const WARNA_IKON: Record<NadaBadge, string> = {
   neutral: WARNA.inkSecondary,
-  brand: WARNA.brandPrimary,
+  brand: WARNA.brandStrong,
   danger: WARNA.dangerInk,
   warning: WARNA.warningInk,
   success: WARNA.successInk,
   info: WARNA.infoInk,
+};
+
+const IKON_DEFAULT: Partial<Record<NadaBadge, keyof typeof Ionicons.glyphMap>> = {
+  brand: "checkmark-circle-outline",
+  danger: "alert-circle-outline",
+  warning: "warning-outline",
+  success: "checkmark-circle-outline",
+  info: "information-circle-outline",
 };
 
 export type BadgeProps = {
@@ -61,6 +69,8 @@ export function Badge({
   icon,
   className = "",
 }: BadgeProps) {
+  const ikon = icon ?? IKON_DEFAULT[tone];
+
   return (
     <View
       className={[
@@ -69,9 +79,9 @@ export function Badge({
         className,
       ].join(" ")}
     >
-      {icon ? (
+      {ikon ? (
         <Ionicons
-          name={icon}
+          name={ikon}
           size={11}
           color={WARNA_IKON[tone]}
           style={{ marginRight: 4 }}

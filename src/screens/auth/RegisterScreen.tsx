@@ -99,17 +99,30 @@ export function RegisterScreen() {
   };
 
   return (
-    <Screen title="Buat akun" subtitle="Tiga langkah, langsung bisa dipakai.">
+    <Screen title="Buat akun TERRA" subtitle="Lengkapi profil singkat untuk mulai.">
       <Stack className="mt-gutter">
-        <Select<Peran>
-          label="Saya adalah"
-          value={peran}
-          onChange={setPeran}
-          options={[
-            { value: "petani", label: "Petani", description: "Punya hasil panen" },
-            { value: "pembeli", label: "Pembeli", description: "Butuh bahan baku" },
-          ]}
-        />
+        <Card title="Anda menggunakan TERRA sebagai apa?">
+          <Select<Peran>
+            label="Pilih peran"
+            value={peran}
+            onChange={setPeran}
+            options={[
+              {
+                value: "petani",
+                label: "Petani",
+                description:
+                  "Menjual dan mencari pemanfaatan terbaik untuk hasil panen.",
+              },
+              {
+                value: "pembeli",
+                label: "Pembeli / Mitra",
+                description:
+                  "Mencari hasil panen yang sesuai dengan kebutuhan usaha.",
+              },
+            ]}
+            className="mt-gutter"
+          />
+        </Card>
 
         <TextField
           label="Nama"
@@ -172,8 +185,8 @@ export function RegisterScreen() {
           subtitle={`${koordinat.latitude.toFixed(4)}, ${koordinat.longitude.toFixed(4)}`}
         >
           <Text variant="caption" tone="muted" className="mt-snug">
-            Dipakai untuk menghitung jarak ke pihak lain (Haversine). Tanpa GPS,
-            titik contoh di Lembang akan dipakai.
+            Dipakai untuk memperkirakan jarak ke pihak lain. Jika lokasi tidak
+            diaktifkan, area Lembang akan dipakai sebagai titik awal.
           </Text>
           <View className="mt-gutter">
             <Button
@@ -189,7 +202,7 @@ export function RegisterScreen() {
         {galat ? <ErrorState error={galat} title="Pendaftaran gagal" /> : null}
 
         <Button
-          label="Daftar dan masuk"
+          label="Buat akun"
           onPress={() => void kirim()}
           loading={sedangKirim}
         />

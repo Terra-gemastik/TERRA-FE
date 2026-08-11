@@ -78,7 +78,7 @@ export function Text({
 }: TextProps) {
   return (
     <RNText
-      className={`${VARIAN[variant]} ${NADA[tone]} ${className}`}
+      className={`font-primary ${VARIAN[variant]} ${NADA[tone]} ${className}`}
       {...props}
     />
   );

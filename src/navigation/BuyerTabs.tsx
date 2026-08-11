@@ -22,9 +22,28 @@ export function BuyerTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: WARNA.brandPrimary,
+        tabBarActiveTintColor: WARNA.inkPrimary,
         tabBarInactiveTintColor: WARNA.inkMuted,
-        tabBarStyle: { borderTopColor: WARNA.outlineSubtle },
+        tabBarActiveBackgroundColor: WARNA.accentBeigeMuted,
+        tabBarLabelStyle: {
+          fontFamily: "Hanken Grotesk",
+          fontSize: 12,
+          fontWeight: "600",
+        },
+        tabBarItemStyle: {
+          borderRadius: 8,
+          marginHorizontal: 3,
+          marginVertical: 6,
+          paddingVertical: 2,
+        },
+        tabBarStyle: {
+          backgroundColor: WARNA.surface,
+          borderTopColor: WARNA.outlineSubtle,
+          height: 66,
+          paddingHorizontal: 6,
+          paddingBottom: 8,
+          paddingTop: 6,
+        },
       }}
     >
       <Tab.Screen
@@ -32,8 +51,8 @@ export function BuyerTabs() {
         component={BuyerHomeScreen}
         options={{
           title: "Pasokan",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="leaf-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "leaf" : "leaf-outline"} size={size} color={color} />
           ),
         }}
       />
@@ -42,8 +61,12 @@ export function BuyerTabs() {
         component={MyDemandsScreen}
         options={{
           title: "Permintaan",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="clipboard-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "clipboard" : "clipboard-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -52,8 +75,8 @@ export function BuyerTabs() {
         component={CommunityScreen}
         options={{
           title: "Komunitas",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "people" : "people-outline"} size={size} color={color} />
           ),
         }}
       />
@@ -63,8 +86,12 @@ export function BuyerTabs() {
         options={{
           title: "Notifikasi",
           tabBarBadge: belumDibaca > 0 ? belumDibaca : undefined,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="notifications-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "notifications" : "notifications-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -73,8 +100,8 @@ export function BuyerTabs() {
         component={ProfileScreen}
         options={{
           title: "Profil",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "person" : "person-outline"} size={size} color={color} />
           ),
         }}
       />

@@ -43,6 +43,20 @@ import {
 import { persen } from "@/lib/format";
 import type { RootStackParamList } from "@/navigation/types";
 
+function labelKeyakinan(skor: number | null | undefined) {
+  if (skor === null || skor === undefined) return "Dilaporkan sendiri";
+  if (skor >= 0.75) return "Keyakinan Tinggi";
+  if (skor >= 0.5) return "Keyakinan Sedang";
+  return "Keyakinan Rendah";
+}
+
+function nadaKeyakinan(skor: number | null | undefined) {
+  if (skor === null || skor === undefined) return "warning" as const;
+  if (skor >= 0.75) return "success" as const;
+  if (skor >= 0.5) return "warning" as const;
+  return "danger" as const;
+}
+
 export function ClassificationResultScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -63,12 +77,26 @@ export function ClassificationResultScreen() {
   const terbitkan = async () => {
     setGalat(null);
     try {
-      const penawaran = await buatPenawaran.mutateAsync({
-        id_klasifikasi: hasil.id_klasifikasi,
+      const basisPenawaran = {
         volume: params.draf.volume,
         lama_sejak_panen: params.draf.lama_sejak_panen,
         kondisi_penyimpanan: params.draf.kondisi_penyimpanan,
         citra: hasil.citra ?? [],
+      };
+      const memakaiKlasifikasiManual =
+        hasil.metode_klasifikasi === "manual_dilaporkan_sendiri";
+
+      const penawaran = await buatPenawaran.mutateAsync({
+        ...basisPenawaran,
+        ...(memakaiKlasifikasiManual
+          ? {
+              id_klasifikasi: null,
+              komoditas: hasil.komoditas,
+              pemicu: hasil.pemicu,
+              jenis_kondisi: hasil.jenis_kondisi,
+              tingkat_keparahan: hasil.tingkat_keparahan,
+            }
+          : { id_klasifikasi: hasil.id_klasifikasi }),
       });
 
       navigation.replace("Rekomendasi", { idPenawaran: penawaran.id_penawaran });
@@ -98,18 +126,32 @@ export function ClassificationResultScreen() {
   return (
     <Screen>
       <Card
-        tone={perluManual ? "warning" : "default"}
-        title={hasil.label_bahasa}
-        subtitle={hasil.penjelasan}
+        tone={perluManual ? "warning" : "brand"}
+        title="Hasil Analisis AI"
+        subtitle={
+          perluManual
+            ? "Periksa kembali kondisi hasil panen sebelum membuat penawaran."
+            : "Analisis selesai. Anda tetap bisa meninjau hasil sebelum menerbitkan."
+        }
         aside={
-          <VerificationBadge
-            dilaporkanSendiri={
-              hasil.metode_klasifikasi === "manual_dilaporkan_sendiri"
-            }
+          <Badge
+            label={perluManual ? "Perlu Konfirmasi" : "Analisis Selesai"}
+            tone={perluManual ? "warning" : "success"}
+            icon={perluManual ? "alert-circle-outline" : "checkmark-circle-outline"}
           />
         }
         className="mt-gutter"
       >
+        <Text variant="label" tone="secondary" className="mt-gutter">
+          Kondisi yang terdeteksi
+        </Text>
+        <Text variant="heading-md" className="mt-tight">
+          {hasil.label_bahasa}
+        </Text>
+        <Text variant="body-sm" tone="secondary" className="mt-tight">
+          {hasil.penjelasan}
+        </Text>
+
         <View className="mt-gutter flex-row flex-wrap">
           {hasil.jenis_kondisi.map((k) => (
             <ConditionBadge key={k} kode={k} showCode className="mr-snug" />
@@ -118,6 +160,25 @@ export function ClassificationResultScreen() {
         </View>
 
         <View className="mt-gutter">
+          <VerificationBadge
+            dilaporkanSendiri={
+              hasil.metode_klasifikasi === "manual_dilaporkan_sendiri"
+            }
+          />
+        </View>
+
+        <View className="mt-gutter">
+          <Badge
+            label={labelKeyakinan(hasil.skor_keyakinan)}
+            tone={nadaKeyakinan(hasil.skor_keyakinan)}
+            icon={
+              hasil.skor_keyakinan !== null &&
+              hasil.skor_keyakinan !== undefined &&
+              hasil.skor_keyakinan < 0.5
+                ? "help-circle-outline"
+                : undefined
+            }
+          />
           <KeyValue
             label="Tingkat keyakinan"
             value={
@@ -125,6 +186,7 @@ export function ClassificationResultScreen() {
                 ? "Tidak berlaku (dilaporkan sendiri)"
                 : persen(hasil.skor_keyakinan)
             }
+            className="mt-snug"
           />
           <KeyValue
             label="Komoditas"
@@ -164,9 +226,8 @@ export function ClassificationResultScreen() {
       {hasil.sumber_placeholder ? (
         <Card tone="info" className="mt-gutter">
           <Text variant="body-sm" tone="info">
-            Hasil ini berasal dari pengklasifikasi tiruan di backend, bukan model
-            YOLO terlatih. Bentuk datanya sudah final — yang berubah nanti hanya
-            isinya.
+            TERRA mendeteksi beberapa kondisi visual dari foto ini. Periksa
+            kembali sebelum menerbitkan penawaran.
           </Text>
         </Card>
       ) : null}

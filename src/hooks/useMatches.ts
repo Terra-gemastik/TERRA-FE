@@ -1,9 +1,13 @@
 /** Two-sided matching — PRD Epics D (forward) and E (reverse). */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 
 import { penawaran, pencocokan } from "@/api/endpoints";
-import type { PenawaranResponse } from "@/api/types";
+import type {
+  HasilPencocokanResponse,
+  KecocokanTercatat,
+  PenawaranResponse,
+} from "@/api/types";
 
 import { kunci } from "./keys";
 
@@ -15,8 +19,10 @@ import { kunci } from "./keys";
  * (PRD D acceptance criteria). The screen shows that instead of a bare
  * "no results".
  */
-export function useCariPembeli(idPenawaran: string | undefined) {
-  return useQuery({
+export function useCariPembeli(
+  idPenawaran: string | undefined,
+): UseQueryResult<HasilPencocokanResponse> {
+  return useQuery<HasilPencocokanResponse>({
     queryKey: kunci.pencocokan.pembeli(idPenawaran ?? ""),
     queryFn: () => pencocokan.cariPembeli(idPenawaran!),
     enabled: Boolean(idPenawaran),
@@ -31,14 +37,16 @@ export function useCariPembeli(idPenawaran: string | undefined) {
  * fine at the volumes involved — the alternative is a backend change.
  */
 export function useKecocokanSaya() {
-  const kecocokan = useQuery({
+  const kecocokan: UseQueryResult<KecocokanTercatat[]> =
+    useQuery<KecocokanTercatat[]>({
     queryKey: kunci.pencocokan.saya,
     queryFn: () => pencocokan.kecocokanSaya(),
   });
 
   const idPenawaran = kecocokan.data?.map((k) => k.id_penawaran) ?? [];
 
-  const penawaranTerkait = useQuery({
+  const penawaranTerkait: UseQueryResult<Record<string, PenawaranResponse>> =
+    useQuery<Record<string, PenawaranResponse>>({
     queryKey: [...kunci.pencocokan.saya, "penawaran", idPenawaran],
     queryFn: async () => {
       const hasil = await Promise.all(

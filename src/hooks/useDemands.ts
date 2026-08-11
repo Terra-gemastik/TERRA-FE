@@ -1,14 +1,19 @@
 /** Buyer demands — PRD Epic E, the reverse flow. */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 
 import { permintaan } from "@/api/endpoints";
-import type { BuatPermintaanRequest } from "@/api/types";
+import type { BuatPermintaanRequest, PermintaanResponse } from "@/api/types";
 
 import { kunci } from "./keys";
 
-export function usePermintaanSaya() {
-  return useQuery({
+export function usePermintaanSaya(): UseQueryResult<PermintaanResponse[]> {
+  return useQuery<PermintaanResponse[]>({
     queryKey: kunci.permintaan.saya,
     queryFn: () => permintaan.milikSaya(),
   });

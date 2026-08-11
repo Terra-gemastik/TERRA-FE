@@ -5,8 +5,9 @@
  */
 
 import { Ionicons } from "@expo/vector-icons";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
+import { MotionPressable } from "./MotionPressable";
 import { Text, type NadaTeks } from "./Text";
 import { WARNA } from "./tokens";
 
@@ -14,7 +15,7 @@ export type VarianTombol = "primary" | "secondary" | "ghost" | "danger";
 export type UkuranTombol = "md" | "sm";
 
 const WADAH: Record<VarianTombol, string> = {
-  primary: "bg-brand-primary border-hairline border-brand-primary",
+  primary: "bg-surface-inverse border-thick border-surface-inverse",
   secondary: "bg-surface border-hairline border-outline",
   ghost: "bg-transparent border-hairline border-transparent",
   danger: "bg-danger border-hairline border-danger",
@@ -28,7 +29,7 @@ const WADAH_NONAKTIF: Record<VarianTombol, string> = {
 };
 
 const NADA_LABEL: Record<VarianTombol, NadaTeks> = {
-  primary: "on-brand",
+  primary: "inverse",
   secondary: "primary",
   ghost: "brand",
   danger: "inverse",
@@ -38,7 +39,7 @@ const NADA_LABEL: Record<VarianTombol, NadaTeks> = {
 const WARNA_IKON: Record<VarianTombol, string> = {
   primary: WARNA.inkInverse,
   secondary: WARNA.inkPrimary,
-  ghost: WARNA.brandPrimary,
+  ghost: WARNA.brandStrong,
   danger: WARNA.inkInverse,
 };
 
@@ -73,14 +74,14 @@ export function Button({
   const mati = disabled || loading;
 
   return (
-    <Pressable
+    <MotionPressable
       accessibilityRole="button"
       accessibilityState={{ disabled: mati, busy: loading }}
       accessibilityLabel={label}
       disabled={mati}
       onPress={onPress}
       className={[
-        "flex-row items-center justify-center rounded-control",
+        "min-h-12 flex-row items-center justify-center rounded-control",
         UKURAN[size],
         mati ? WADAH_NONAKTIF[variant] : WADAH[variant],
         fullWidth ? "w-full" : "self-start",
@@ -107,6 +108,6 @@ export function Button({
           </Text>
         </View>
       )}
-    </Pressable>
+    </MotionPressable>
   );
 }

@@ -21,7 +21,7 @@ import { setOnUnauthorized } from "@/api/client";
 import { onboarding } from "@/api/endpoints";
 import type { Peran, ProfilResponse } from "@/api/types";
 
-import { setTokenAktif } from "./session";
+import { setTokenAktif, tokenUntukKredensialDemo } from "./session";
 import { bacaToken, hapusToken, simpanToken } from "./storage";
 
 type AuthState = {
@@ -31,6 +31,8 @@ type AuthState = {
   memulihkan: boolean;
   /** Validate a token against the API and sign in with it. */
   masuk: (token: string) => Promise<ProfilResponse>;
+  /** Demo-only credential facade over the existing token-backed backend. */
+  masukDenganKredensial: (email: string, password: string) => Promise<ProfilResponse>;
   keluar: () => Promise<void>;
   /** Re-read the profile — used after registering or editing it. */
   segarkan: () => Promise<void>;
@@ -63,6 +65,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return profil;
     },
     [],
+  );
+
+  const masukDenganKredensial = useCallback(
+    async (email: string, password: string) => {
+      const token = tokenUntukKredensialDemo(email, password);
+      if (!token) {
+        throw new Error("Email atau kata sandi belum sesuai.");
+      }
+      return masuk(token);
+    },
+    [masuk],
   );
 
   const segarkan = useCallback(async () => {
@@ -112,10 +125,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       peran: pengguna?.peran ?? null,
       memulihkan,
       masuk,
+      masukDenganKredensial,
       keluar,
       segarkan,
     }),
-    [pengguna, memulihkan, masuk, keluar, segarkan],
+    [pengguna, memulihkan, masuk, masukDenganKredensial, keluar, segarkan],
   );
 
   return <Konteks.Provider value={nilai}>{children}</Konteks.Provider>;

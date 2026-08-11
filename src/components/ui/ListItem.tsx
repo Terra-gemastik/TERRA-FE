@@ -2,8 +2,9 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import type { ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 
+import { MotionPressable } from "./MotionPressable";
 import { Text } from "./Text";
 import { WARNA } from "./tokens";
 
@@ -36,7 +37,7 @@ export function ListItem({
   const isi = (
     <View className="flex-row items-start">
       {icon ? (
-        <View className="mr-gutter mt-tight h-8 w-8 items-center justify-center rounded-control bg-surface-sunken">
+        <View className="mr-gutter mt-tight h-8 w-8 items-center justify-center rounded-control border-hairline border-outline bg-brand-muted">
           <Ionicons name={icon} size={16} color={WARNA.inkSecondary} />
         </View>
       ) : null}
@@ -66,16 +67,21 @@ export function ListItem({
   const kelas = [
     "rounded-card border-hairline p-gutter",
     highlighted
-      ? "border-brand-primary bg-brand-muted"
+      ? "border-thick border-brand-strong bg-brand-muted"
       : "border-outline-subtle bg-surface",
     className,
   ].join(" ");
 
   if (onPress) {
     return (
-      <Pressable accessibilityRole="button" onPress={onPress} className={kelas}>
+      <MotionPressable
+        accessibilityRole="button"
+        onPress={onPress}
+        pressedScale={0.99}
+        className={kelas}
+      >
         {isi}
-      </Pressable>
+      </MotionPressable>
     );
   }
   return <View className={kelas}>{isi}</View>;

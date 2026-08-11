@@ -7,9 +7,12 @@
  * (PRD NF-05).
  */
 
-import { Pressable, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { View } from "react-native";
 
+import { MotionPressable } from "./MotionPressable";
 import { Text } from "./Text";
+import { WARNA } from "./tokens";
 
 export type OpsiPilihan<T extends string> = {
   value: T;
@@ -29,26 +32,36 @@ function Chip({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <MotionPressable
       accessibilityRole="radio"
       accessibilityState={{ selected: terpilih }}
       onPress={onPress}
       className={[
-        "mb-snug mr-snug rounded-control border-hairline px-gutter py-2",
+        "mb-snug mr-snug min-h-11 rounded-control border-hairline px-gutter py-2",
         terpilih
-          ? "border-brand-primary bg-brand-muted"
+          ? "border-brand-strong bg-brand-muted"
           : "border-outline bg-surface",
       ].join(" ")}
     >
-      <Text variant="body-sm" tone={terpilih ? "brand" : "primary"}>
-        {label}
-      </Text>
+      <View className="flex-row items-center">
+        {terpilih ? (
+          <Ionicons
+            name="checkmark-circle-outline"
+            size={14}
+            color={WARNA.brandStrong}
+            style={{ marginRight: 6 }}
+          />
+        ) : null}
+        <Text variant="body-sm" tone={terpilih ? "brand" : "primary"}>
+          {label}
+        </Text>
+      </View>
       {description ? (
         <Text variant="caption" tone="muted" className="mt-tight">
           {description}
         </Text>
       ) : null}
-    </Pressable>
+    </MotionPressable>
   );
 }
 
@@ -67,7 +80,7 @@ function Bingkai({
 }) {
   return (
     <View className={className}>
-      <Text variant="label" tone="secondary">
+      <Text variant="label" tone="primary">
         {label}
       </Text>
       <View className="mt-tight flex-row flex-wrap">{children}</View>

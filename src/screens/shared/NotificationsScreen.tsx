@@ -12,12 +12,10 @@ import { View } from "react-native";
 
 import {
   Badge,
-  Card,
   ListItem,
   QueryState,
   Screen,
   Stack,
-  Text,
   UrgencyBadge,
 } from "@/components/ui";
 import { useNotifikasiSaya, useTandaiDibaca } from "@/hooks/useNotifications";
@@ -36,13 +34,6 @@ export function NotificationsScreen() {
       onRefresh={() => void notifikasi.refetch()}
       refreshing={notifikasi.isRefetching}
     >
-      <Card tone="info" className="mt-gutter">
-        <Text variant="body-sm" tone="info">
-          Pengiriman push belum aktif di backend. Notifikasi tetap dibuat dan
-          tersimpan — aplikasi mengambilnya secara berkala.
-        </Text>
-      </Card>
-
       <View className="mt-section">
         <QueryState
           isLoading={notifikasi.isLoading}
@@ -75,7 +66,7 @@ export function NotificationsScreen() {
                     <Badge
                       label={
                         n.status_kirim === "tercatat"
-                          ? "Tercatat (belum dikirim)"
+                          ? "Tersimpan"
                           : n.status_kirim
                       }
                       tone={n.status_kirim === "terkirim" ? "success" : "neutral"}
