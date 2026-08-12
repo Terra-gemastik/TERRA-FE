@@ -21,9 +21,28 @@ export function FarmerTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: WARNA.brandPrimary,
+        tabBarActiveTintColor: WARNA.inkPrimary,
         tabBarInactiveTintColor: WARNA.inkMuted,
-        tabBarStyle: { borderTopColor: WARNA.outlineSubtle },
+        tabBarActiveBackgroundColor: WARNA.accentBeigeMuted,
+        tabBarLabelStyle: {
+          fontFamily: "Hanken Grotesk",
+          fontSize: 12,
+          fontWeight: "600",
+        },
+        tabBarItemStyle: {
+          borderRadius: 8,
+          marginHorizontal: 4,
+          marginVertical: 6,
+          paddingVertical: 2,
+        },
+        tabBarStyle: {
+          backgroundColor: WARNA.surface,
+          borderTopColor: WARNA.outlineSubtle,
+          height: 66,
+          paddingHorizontal: 8,
+          paddingBottom: 8,
+          paddingTop: 6,
+        },
       }}
     >
       <Tab.Screen
@@ -31,8 +50,8 @@ export function FarmerTabs() {
         component={FarmerHomeScreen}
         options={{
           title: "Beranda",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "home" : "home-outline"} size={size} color={color} />
           ),
         }}
       />
@@ -41,8 +60,8 @@ export function FarmerTabs() {
         component={CommunityScreen}
         options={{
           title: "Komunitas",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "people" : "people-outline"} size={size} color={color} />
           ),
         }}
       />
@@ -52,8 +71,12 @@ export function FarmerTabs() {
         options={{
           title: "Notifikasi",
           tabBarBadge: belumDibaca > 0 ? belumDibaca : undefined,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="notifications-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "notifications" : "notifications-outline"}
+              size={size}
+              color={color}
+            />
           ),
         }}
       />
@@ -62,8 +85,8 @@ export function FarmerTabs() {
         component={ProfileScreen}
         options={{
           title: "Profil",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? "person" : "person-outline"} size={size} color={color} />
           ),
         }}
       />

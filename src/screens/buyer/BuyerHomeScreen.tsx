@@ -52,7 +52,7 @@ export function BuyerHomeScreen() {
       refreshing={kecocokan.isRefetching}
     >
       <Card
-        tone={permintaanAktif > 0 ? "default" : "warning"}
+        tone={permintaanAktif > 0 ? "brand" : "warning"}
         title={`${permintaanAktif} permintaan aktif`}
         subtitle={
           permintaanAktif > 0
@@ -60,13 +60,43 @@ export function BuyerHomeScreen() {
             : "Tanpa permintaan aktif, tidak ada pasokan yang bisa dicocokkan."
         }
         className="mt-gutter"
-      />
+      >
+        <View className="mt-gutter">
+          <Button
+            label="Pasang permintaan baru"
+            icon="add-circle-outline"
+            onPress={() => navigation.navigate("PasangPermintaan")}
+          />
+        </View>
+      </Card>
+
+      <View className="mt-gutter flex-row">
+        <View className="mr-snug flex-1">
+          <Button
+            label="Permintaan saya"
+            variant="secondary"
+            icon="clipboard-outline"
+            onPress={() =>
+              navigation.navigate("RootPembeli", { screen: "PermintaanSaya" })
+            }
+          />
+        </View>
+        <View className="flex-1">
+          <Button
+            label="Transaksi"
+            variant="secondary"
+            icon="receipt-outline"
+            onPress={() => navigation.navigate("Transaksi")}
+          />
+        </View>
+      </View>
 
       <View className="mt-gutter">
         <Button
-          label="Pasang permintaan baru"
-          icon="add-circle-outline"
-          onPress={() => navigation.navigate("PasangPermintaan")}
+          label="Segarkan pasokan"
+          variant="ghost"
+          icon="refresh-outline"
+          onPress={refetch}
         />
       </View>
 
@@ -130,8 +160,7 @@ export function BuyerHomeScreen() {
       </View>
 
       <Text variant="caption" tone="muted" className="mt-section">
-        Notifikasi push belum aktif di backend — pasokan baru muncul di sini dan
-        di tab Notifikasi saat aplikasi menyegarkan data.
+        Pasokan baru akan muncul saat ada panen yang sesuai dengan permintaan Anda.
       </Text>
     </Screen>
   );

@@ -1,5 +1,6 @@
 /** Labelled text input with helper and error slots. */
 
+import { useState } from "react";
 import { TextInput, View, type KeyboardTypeOptions } from "react-native";
 
 import { Text } from "./Text";
@@ -37,21 +38,27 @@ export function TextField({
   suffix,
   className = "",
 }: TextFieldProps) {
+  const [fokus, setFokus] = useState(false);
+
   return (
     <View className={className}>
-      <Text variant="label" tone="secondary">
+      <Text variant="label" tone="primary">
         {label}
       </Text>
 
       <View
         className={[
-          "mt-tight flex-row items-center rounded-control border-hairline px-snug",
-          error ? "border-danger bg-danger-surface" : "border-outline bg-surface",
+          "mt-tight min-h-12 flex-row items-center rounded-control border-hairline px-gutter",
+          error
+            ? "border-danger bg-danger-surface"
+            : fokus
+              ? "border-brand-strong bg-brand-muted"
+              : "border-outline bg-surface",
           editable ? "" : "bg-surface-disabled",
         ].join(" ")}
       >
         <TextInput
-          className={`flex-1 py-3 text-body text-ink-primary ${
+          className={`flex-1 font-primary py-3 text-body text-ink-primary ${
             multiline ? "h-24" : ""
           }`}
           value={value}
@@ -65,6 +72,8 @@ export function TextField({
           secureTextEntry={secureTextEntry}
           editable={editable}
           accessibilityLabel={label}
+          onFocus={() => setFokus(true)}
+          onBlur={() => setFokus(false)}
         />
         {suffix ? (
           <Text variant="body-sm" tone="muted" className="ml-snug">

@@ -1,14 +1,24 @@
 /** Farmer offers — PRD §8 `PenawaranPetani`. */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 
 import { penawaran } from "@/api/endpoints";
-import type { BuatPenawaranRequest, Komoditas, StatusPenawaran } from "@/api/types";
+import type {
+  BuatPenawaranRequest,
+  Komoditas,
+  PenawaranResponse,
+  StatusPenawaran,
+} from "@/api/types";
 
 import { kunci } from "./keys";
 
-export function usePenawaranSaya() {
-  return useQuery({
+export function usePenawaranSaya(): UseQueryResult<PenawaranResponse[]> {
+  return useQuery<PenawaranResponse[]>({
     queryKey: kunci.penawaran.saya,
     queryFn: () => penawaran.milikSaya(),
   });
@@ -17,15 +27,17 @@ export function usePenawaranSaya() {
 export function useDaftarPenawaran(filter?: {
   komoditas?: Komoditas;
   status?: StatusPenawaran;
-}) {
-  return useQuery({
+}): UseQueryResult<PenawaranResponse[]> {
+  return useQuery<PenawaranResponse[]>({
     queryKey: kunci.penawaran.daftar(filter),
     queryFn: () => penawaran.daftar(filter),
   });
 }
 
-export function usePenawaran(idPenawaran: string | undefined) {
-  return useQuery({
+export function usePenawaran(
+  idPenawaran: string | undefined,
+): UseQueryResult<PenawaranResponse> {
+  return useQuery<PenawaranResponse>({
     queryKey: kunci.penawaran.detail(idPenawaran ?? ""),
     queryFn: () => penawaran.detail(idPenawaran!),
     enabled: Boolean(idPenawaran),

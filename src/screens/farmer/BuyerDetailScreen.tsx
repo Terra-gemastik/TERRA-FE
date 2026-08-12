@@ -113,25 +113,33 @@ export function BuyerDetailScreen() {
         subtitle={`${LABEL_JENIS_USAHA[pembeli.jenis_usaha]} · ${
           pembeli.alamat_umum ?? "lokasi umum tidak diisi"
         }`}
+        aside={<Badge label="Buyer cocok" tone="brand" icon="people-outline" />}
         className="mt-gutter"
       >
+        <Text variant="label" tone="secondary" className="mt-gutter">
+          Harga penawaran
+        </Text>
+        <Text variant="numeric" className="mt-tight">
+          {rentangRupiah(
+            pembeli.rentang_harga.min,
+            pembeli.rentang_harga.max,
+          )}
+        </Text>
+        <Text variant="caption" tone="muted" className="mt-tight">
+          Nilai produk, belum termasuk ongkos angkut.
+        </Text>
+
         <View className="mt-gutter">
-          <KeyValue label="Jarak" value={kilometer(pembeli.jarak_km)} />
           <KeyValue
-            label="Kebutuhan"
+            label="Volume diterima"
             value={kilogram(pembeli.volume_dibutuhkan)}
           />
+          <KeyValue label="Jarak" value={kilometer(pembeli.jarak_km)} />
           <KeyValue
             label="Volume minimum"
             value={kilogram(pembeli.volume_minimum)}
           />
-          <KeyValue
-            label="Harga ditawarkan"
-            value={rentangRupiah(
-              pembeli.rentang_harga.min,
-              pembeli.rentang_harga.max,
-            )}
-          />
+          <KeyValue label="Estimasi logistik" value="Ongkos angkut belum dihitung TERRA" />
         </View>
       </Card>
 

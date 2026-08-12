@@ -146,7 +146,7 @@ export function PostDemandScreen() {
           onChangeText={setRadius}
           keyboardType="numeric"
           suffix="km"
-          helper="Jarak diukur garis lurus (Haversine) dari lokasi Anda."
+          helper="Jarak diperkirakan dari lokasi Anda."
         />
 
         <Card title="Harga yang Anda tawarkan" subtitle="Per kg produk.">

@@ -145,11 +145,10 @@ export function CommunityScreen() {
         </Stack>
       </View>
 
-      {papan.data?.catatan ? (
-        <Text variant="caption" tone="muted" className="mt-section">
-          {papan.data.catatan}
-        </Text>
-      ) : null}
+      <Text variant="caption" tone="muted" className="mt-section">
+        Gunakan komunitas untuk berbagi kabar panen, kebutuhan bahan, dan kontak
+        yang bisa membantu sekitar Anda.
+      </Text>
     </Screen>
   );
 }

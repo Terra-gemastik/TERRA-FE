@@ -17,10 +17,10 @@
  *
  * and the only way to validate one is `GET /onboarding/saya`.
  *
- * That is deliberate on the backend side: context.md puts production-grade
- * auth out of scope for the MVP. It means the Login screen is a token-entry
- * screen, which is honest about what exists rather than faking a password box
- * against an endpoint that would ignore it.
+ * The production UI deliberately hides this wire format. For the current demo
+ * environment, normal-looking credentials are mapped to these opaque tokens in
+ * this file only, then every sign-in still validates the token against
+ * GET /onboarding/saya. Replace that mapping when a real login endpoint exists.
  *
  * ============================================================================
  * SWAPPING TO REAL JWT LATER
@@ -30,7 +30,7 @@
  *
  *   1. Change `headerAuth()` to return { Authorization: `Bearer ${token}` }.
  *   2. Add a `login(email, password)` call in src/api/endpoints.ts and call it
- *      from LoginScreen instead of `verifikasiToken`.
+ *      from AuthContext instead of `tokenUntukKredensialDemo`.
  *   3. If tokens expire, add refresh handling in `src/api/client.ts` around
  *      the existing 401 hook.
  *
@@ -70,19 +70,29 @@ export function headerAuth(token: string | null = tokenAktif): Record<string, st
 }
 
 /**
- * Seeded demo accounts from the backend's `scripts/init_db --seed`.
+ * Demo-only credential bridge.
  *
- * These are real tokens against the real database, not mock data — the login
- * screen offers them as quick-fill chips so a demo does not start with typing.
- * Every one still round-trips through GET /onboarding/saya to sign in.
+ * Normal users never see or type tokens. These credentials map internally to
+ * the current MVP tokens and are validated by the same profile request as every
+ * other session. Keep the bridge isolated here so real auth can replace it
+ * without changing screens.
  */
-export const TOKEN_DEMO = [
-  { token: "demo-petani-1", label: "Petani 1", catatan: "Lembang · riwayat bersih" },
-  { token: "demo-petani-2", label: "Petani 2", catatan: "Cisarua · ada laporan" },
-  { token: "demo-pembeli-1", label: "Pembeli 1", catatan: "Pengolah saus" },
-  { token: "demo-pembeli-2", label: "Pembeli 2", catatan: "Peternak" },
-  { token: "demo-pembeli-3", label: "Pembeli 3", catatan: "Produsen kompos" },
-  { token: "demo-pembeli-4", label: "Pembeli 4", catatan: "Pengolah keripik" },
-  { token: "demo-pembeli-5", label: "Pembeli 5", catatan: "Pengolah jus" },
-  { token: "demo-pembeli-6", label: "Pembeli 6", catatan: "Ada pembatalan" },
+const AKUN_DEMO = [
+  { email: "budi@terra.id", username: "budi", password: "terra123", token: "demo-petani-1" },
+  { email: "sari@terra.id", username: "sari", password: "terra123", token: "demo-petani-2" },
+  { email: "sambal@terra.id", username: "sambal", password: "terra123", token: "demo-pembeli-1" },
+  { email: "ternak@terra.id", username: "ternak", password: "terra123", token: "demo-pembeli-2" },
+  { email: "kompos@terra.id", username: "kompos", password: "terra123", token: "demo-pembeli-3" },
+  { email: "keripik@terra.id", username: "keripik", password: "terra123", token: "demo-pembeli-4" },
+  { email: "jus@terra.id", username: "jus", password: "terra123", token: "demo-pembeli-5" },
+  { email: "mitra@terra.id", username: "mitra", password: "terra123", token: "demo-pembeli-6" },
 ] as const;
+
+export function tokenUntukKredensialDemo(identifier: string, password: string): string | null {
+  const nilai = identifier.trim().toLowerCase();
+  const akun = AKUN_DEMO.find(
+    (item) =>
+      (item.email === nilai || item.username === nilai) && item.password === password,
+  );
+  return akun?.token ?? null;
+}

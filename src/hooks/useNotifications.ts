@@ -1,8 +1,14 @@
 /** Notifications — PRD Epic H. */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 
 import { notifikasi } from "@/api/endpoints";
+import type { NotifikasiResponse } from "@/api/types";
 
 import { kunci } from "./keys";
 
@@ -18,8 +24,8 @@ import { kunci } from "./keys";
  * When the backend gains a real push provider, drop `refetchInterval` and
  * invalidate this key from the push handler instead.
  */
-export function useNotifikasiSaya() {
-  return useQuery({
+export function useNotifikasiSaya(): UseQueryResult<NotifikasiResponse[]> {
+  return useQuery<NotifikasiResponse[]>({
     queryKey: kunci.notifikasi,
     queryFn: () => notifikasi.milikSaya(),
     refetchInterval: 30_000,

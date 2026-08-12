@@ -1,8 +1,9 @@
 /** Rule-based recommendations — PRD Epic C. */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 
 import { rekomendasi } from "@/api/endpoints";
+import type { RekomendasiResponse } from "@/api/types";
 
 import { kunci } from "./keys";
 
@@ -14,8 +15,10 @@ import { kunci } from "./keys";
  * screen surfaces it rather than hiding it, because "why am I being told
  * this" is answerable here and should stay answerable.
  */
-export function useRekomendasi(idPenawaran: string | undefined) {
-  return useQuery({
+export function useRekomendasi(
+  idPenawaran: string | undefined,
+): UseQueryResult<RekomendasiResponse> {
+  return useQuery<RekomendasiResponse>({
     queryKey: kunci.rekomendasi(idPenawaran ?? ""),
     queryFn: () => rekomendasi.untukPenawaran(idPenawaran!),
     enabled: Boolean(idPenawaran),

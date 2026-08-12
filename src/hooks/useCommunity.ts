@@ -1,9 +1,14 @@
 /** Community & sharing — PRD Epic G. */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 
 import { komunitas } from "@/api/endpoints";
-import type { BuatPosRequest } from "@/api/types";
+import type { BuatPosRequest, KartuBerbagi, PapanKomunitasResponse } from "@/api/types";
 
 import { kunci } from "./keys";
 
@@ -14,8 +19,10 @@ import { kunci } from "./keys";
  * information surface, and no shipment-pooling is built on top of it. The
  * response carries that note and the screen shows it.
  */
-export function usePapanKomunitas(wilayah?: string) {
-  return useQuery({
+export function usePapanKomunitas(
+  wilayah?: string,
+): UseQueryResult<PapanKomunitasResponse> {
+  return useQuery<PapanKomunitasResponse>({
     queryKey: kunci.komunitas.papan(wilayah),
     queryFn: () => komunitas.papan(wilayah),
   });
@@ -39,8 +46,10 @@ export function useBuatPos() {
  * the WhatsApp *link preview* half of PRD §6.7 is not achievable; sharing
  * text plus a deep link is.
  */
-export function useKartuBerbagi(idPenawaran: string | undefined) {
-  return useQuery({
+export function useKartuBerbagi(
+  idPenawaran: string | undefined,
+): UseQueryResult<KartuBerbagi> {
+  return useQuery<KartuBerbagi>({
     queryKey: kunci.komunitas.kartu(idPenawaran ?? ""),
     queryFn: () => komunitas.kartu(idPenawaran!),
     enabled: Boolean(idPenawaran),

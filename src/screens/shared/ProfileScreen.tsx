@@ -227,9 +227,6 @@ export function ProfileScreen() {
               />
             </Stack>
 
-            <Text variant="caption" tone="muted" className="mt-gutter">
-              ID pengguna: {profil.data.id_pengguna}
-            </Text>
           </>
         ) : null}
       </QueryState>
