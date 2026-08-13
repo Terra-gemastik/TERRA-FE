@@ -155,6 +155,16 @@ export const pencocokan = {
 
   /** Reverse flow: supply that matched this buyer's standing demands. */
   kecocokanSaya: () => request<T.KecocokanTercatat[]>("/kecocokan/saya"),
+
+  /**
+   * Open-data venues near an offer — pasar, peternak — for when no buyer is
+   * registered nearby. Not buyers: nothing here has agreed to purchase.
+   */
+  tempatPenyaluran: (idPenawaran: string, radiusKm?: number) =>
+    request<T.TempatPenyaluranResponse>(
+      `/penawaran/${idPenawaran}/tempat-penyaluran` +
+        (radiusKm ? `?radius_km=${radiusKm}` : ""),
+    ),
 };
 
 // ===========================================================================

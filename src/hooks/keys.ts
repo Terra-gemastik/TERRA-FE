@@ -31,6 +31,8 @@ export const kunci = {
     penawaran: (idPenawaran: string) =>
       ["pencocokan", "penawaran", idPenawaran] as const,
     saya: ["pencocokan", "saya"] as const,
+    tempat: (idPenawaran: string, radiusKm?: number) =>
+      ["pencocokan", "tempat", idPenawaran, radiusKm ?? 0] as const,
   },
   trust: {
     transaksi: ["transaksi", "saya"] as const,

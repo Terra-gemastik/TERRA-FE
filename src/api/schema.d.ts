@@ -380,6 +380,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/penawaran/{id_penawaran}/tempat-penyaluran": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tempat penyaluran terdekat dari data terbuka (pasar, peternak)
+         * @description Where the farmer could take this when nobody is registered nearby.
+         *
+         *     Separate from `/pembeli` on purpose. That endpoint returns buyers who
+         *     posted a demand; this one returns locations that merely exist, taken from
+         *     OpenStreetMap. Nothing here has agreed to buy anything, so no price, no
+         *     reputation and no contact is returned, and every row is marked unverified.
+         *
+         *     LICENCE: the response carries `atribusi` and `lisensi`. The data is
+         *     OpenStreetMap under ODbL -- any screen that renders `tempat` must also
+         *     render the attribution. It is in the payload so the client cannot forget.
+         */
+        get: operations["tempat_penyaluran_penawaran__id_penawaran__tempat_penyaluran_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/penawaran/{id_penawaran}/kecocokan": {
         parameters: {
             query?: never;
@@ -744,7 +773,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/": {
+    "/api/info": {
         parameters: {
             query?: never;
             header?: never;
@@ -752,7 +781,7 @@ export interface paths {
             cookie?: never;
         };
         /** Info layanan */
-        get: operations["akar__get"];
+        get: operations["info_api_info_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1839,6 +1868,57 @@ export interface components {
          */
         StatusTransaksi: "disepakati" | "selesai" | "dibatalkan_pembeli" | "dibatalkan_petani";
         /**
+         * TempatPenyaluranResponse
+         * @description Venues near an offer, for when no registered buyer exists yet.
+         */
+        TempatPenyaluranResponse: {
+            /** Id Penawaran */
+            id_penawaran: string;
+            /** Radius Km */
+            radius_km: number;
+            /** Jumlah */
+            jumlah: number;
+            /** Tempat */
+            tempat?: components["schemas"]["TempatSekitar"][];
+            /** Pesan */
+            pesan: string;
+            /** Atribusi */
+            atribusi: string;
+            /** Lisensi */
+            lisensi: string;
+        };
+        /**
+         * TempatSekitar
+         * @description One nearby venue from the open-data directory.
+         *
+         *     NOT a buyer. There is no `rentang_harga`, no reputation and no contact
+         *     here, because nobody at this place has agreed to anything -- it is a
+         *     location that exists, nothing more. Kept structurally distinct from
+         *     `PembeliCocok` so the two can never be confused in the client.
+         */
+        TempatSekitar: {
+            /** Id */
+            id: string;
+            /** Nama */
+            nama: string;
+            jenis_usaha: components["schemas"]["JenisUsaha"];
+            /**
+             * Jarak Km
+             * @description Haversine dari lokasi penawaran.
+             */
+            jarak_km: number;
+            /**
+             * Status Verifikasi
+             * @description 'dari_sumber_terbuka' = belum diverifikasi tim.
+             */
+            status_verifikasi: string;
+            /**
+             * Keterangan
+             * @description Penjelasan bahasa sehari-hari untuk petani.
+             */
+            keterangan: string;
+        };
+        /**
          * TingkatKeparahan
          * @enum {string}
          */
@@ -2482,6 +2562,39 @@ export interface operations {
             };
         };
     };
+    tempat_penyaluran_penawaran__id_penawaran__tempat_penyaluran_get: {
+        parameters: {
+            query?: {
+                radius_km?: number | null;
+            };
+            header?: never;
+            path: {
+                id_penawaran: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TempatPenyaluranResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     kecocokan_penawaran_penawaran__id_penawaran__kecocokan_get: {
         parameters: {
             query?: never;
@@ -2983,7 +3096,7 @@ export interface operations {
             };
         };
     };
-    akar__get: {
+    info_api_info_get: {
         parameters: {
             query?: never;
             header?: never;

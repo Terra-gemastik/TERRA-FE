@@ -141,6 +141,21 @@ export function RecommendationsScreen() {
             navigation.navigate("Pencocokan", { idPenawaran: params.idPenawaran })
           }
         />
+        {/*
+          Fallback route when no buyer is registered nearby: places that exist
+          on the map. Kept a separate destination from "pembeli terdekat" so a
+          venue is never mistaken for someone who agreed to buy.
+        */}
+        <Button
+          label="Tempat penyaluran di sekitar"
+          variant="secondary"
+          icon="map-outline"
+          onPress={() =>
+            navigation.navigate("TempatPenyaluran", {
+              idPenawaran: params.idPenawaran,
+            })
+          }
+        />
         <Button
           label="Bagikan kartu penawaran"
           variant="secondary"

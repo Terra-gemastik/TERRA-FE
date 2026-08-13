@@ -439,6 +439,33 @@ export type DampakResponse = {
 };
 
 /**
+ * One nearby venue from the open-data directory.
+ *
+ * Deliberately NOT a buyer: no price, no reputation, no contact. Nobody at
+ * this place has agreed to anything — it is a location that exists. Kept a
+ * separate type from `PembeliCocok` so the two can never be mixed up.
+ */
+export type TempatSekitar = {
+  id: string;
+  nama: string;
+  jenis_usaha: JenisUsaha;
+  jarak_km: number;
+  status_verifikasi: string;
+  keterangan: string;
+};
+
+export type TempatPenyaluranResponse = {
+  id_penawaran: string;
+  radius_km: number;
+  jumlah: number;
+  tempat?: TempatSekitar[];
+  pesan: string;
+  /** ODbL requires this to be displayed wherever `tempat` is rendered. */
+  atribusi: string;
+  lisensi: string;
+};
+
+/**
  * One photo ready for multipart upload.
  *
  * The backend's POST /klasifikasi takes `foto` as an array of file parts plus

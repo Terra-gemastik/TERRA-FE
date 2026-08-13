@@ -861,6 +861,70 @@
         }
       }
     },
+    "/penawaran/{id_penawaran}/tempat-penyaluran": {
+      "get": {
+        "tags": [
+          "D/E · Pencocokan Dua Sisi"
+        ],
+        "summary": "Tempat penyaluran terdekat dari data terbuka (pasar, peternak)",
+        "description": "Where the farmer could take this when nobody is registered nearby.\n\nSeparate from `/pembeli` on purpose. That endpoint returns buyers who\nposted a demand; this one returns locations that merely exist, taken from\nOpenStreetMap. Nothing here has agreed to buy anything, so no price, no\nreputation and no contact is returned, and every row is marked unverified.\n\nLICENCE: the response carries `atribusi` and `lisensi`. The data is\nOpenStreetMap under ODbL -- any screen that renders `tempat` must also\nrender the attribution. It is in the payload so the client cannot forget.",
+        "operationId": "tempat_penyaluran_penawaran__id_penawaran__tempat_penyaluran_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id_penawaran",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Id Penawaran"
+            }
+          },
+          {
+            "name": "radius_km",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Radius Km"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TempatPenyaluranResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/penawaran/{id_penawaran}/kecocokan": {
       "get": {
         "tags": [
@@ -1651,13 +1715,13 @@
         ]
       }
     },
-    "/": {
+    "/api/info": {
       "get": {
         "tags": [
           "Status"
         ],
         "summary": "Info layanan",
-        "operationId": "akar__get",
+        "operationId": "info_api_info_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1666,7 +1730,7 @@
                 "schema": {
                   "additionalProperties": true,
                   "type": "object",
-                  "title": "Response Akar  Get"
+                  "title": "Response Info Api Info Get"
                 }
               }
             }
@@ -4291,6 +4355,93 @@
           "dibatalkan_petani"
         ],
         "title": "StatusTransaksi"
+      },
+      "TempatPenyaluranResponse": {
+        "properties": {
+          "id_penawaran": {
+            "type": "string",
+            "title": "Id Penawaran"
+          },
+          "radius_km": {
+            "type": "integer",
+            "title": "Radius Km"
+          },
+          "jumlah": {
+            "type": "integer",
+            "title": "Jumlah"
+          },
+          "tempat": {
+            "items": {
+              "$ref": "#/components/schemas/TempatSekitar"
+            },
+            "type": "array",
+            "title": "Tempat"
+          },
+          "pesan": {
+            "type": "string",
+            "title": "Pesan"
+          },
+          "atribusi": {
+            "type": "string",
+            "title": "Atribusi"
+          },
+          "lisensi": {
+            "type": "string",
+            "title": "Lisensi"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_penawaran",
+          "radius_km",
+          "jumlah",
+          "pesan",
+          "atribusi",
+          "lisensi"
+        ],
+        "title": "TempatPenyaluranResponse",
+        "description": "Venues near an offer, for when no registered buyer exists yet."
+      },
+      "TempatSekitar": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "nama": {
+            "type": "string",
+            "title": "Nama"
+          },
+          "jenis_usaha": {
+            "$ref": "#/components/schemas/JenisUsaha"
+          },
+          "jarak_km": {
+            "type": "number",
+            "title": "Jarak Km",
+            "description": "Haversine dari lokasi penawaran."
+          },
+          "status_verifikasi": {
+            "type": "string",
+            "title": "Status Verifikasi",
+            "description": "'dari_sumber_terbuka' = belum diverifikasi tim."
+          },
+          "keterangan": {
+            "type": "string",
+            "title": "Keterangan",
+            "description": "Penjelasan bahasa sehari-hari untuk petani."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nama",
+          "jenis_usaha",
+          "jarak_km",
+          "status_verifikasi",
+          "keterangan"
+        ],
+        "title": "TempatSekitar",
+        "description": "One nearby venue from the open-data directory.\n\nNOT a buyer. There is no `rentang_harga`, no reputation and no contact\nhere, because nobody at this place has agreed to anything -- it is a\nlocation that exists, nothing more. Kept structurally distinct from\n`PembeliCocok` so the two can never be confused in the client."
       },
       "TingkatKeparahan": {
         "type": "string",

@@ -22,6 +22,7 @@ import { ClassificationResultScreen } from "@/screens/farmer/ClassificationResul
 import { MatchesScreen } from "@/screens/farmer/MatchesScreen";
 import { NewOfferScreen } from "@/screens/farmer/NewOfferScreen";
 import { RecommendationsScreen } from "@/screens/farmer/RecommendationsScreen";
+import { VenuesScreen } from "@/screens/farmer/VenuesScreen";
 import { ShareCardScreen } from "@/screens/farmer/ShareCardScreen";
 import { LoginScreen } from "@/screens/auth/LoginScreen";
 import { RegisterScreen } from "@/screens/auth/RegisterScreen";
@@ -118,6 +119,11 @@ export function RootNavigator() {
                 name="Pencocokan"
                 component={MatchesScreen}
                 options={{ title: "Pembeli cocok" }}
+              />
+              <Stack.Screen
+                name="TempatPenyaluran"
+                component={VenuesScreen}
+                options={{ title: "Tempat penyaluran" }}
               />
               <Stack.Screen
                 name="DetailPembeli"
