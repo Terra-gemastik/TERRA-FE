@@ -1,0 +1,34 @@
+# Shared sign-in subflow.
+#
+#   - runFlow:
+#       file: shared-masuk.yaml
+#       env: { AKUN: budi, SANDI: terra123, NAMA: "Pak Dedi Supriadi" }
+#
+# Note the anchored regex on the submit button. Plain "Masuk" also matches the
+# heading "Masuk ke akun" on the same screen, so it must be pinned to the exact
+# string.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+
+# Welcome screen comes first — the login form is one tap in.
+- assertVisible: "Lebih Banyak Hasil Panen.*"
+- tapOn:
+    text: "^Masuk$"
+
+- assertVisible: "Masuk ke akun"
+
+- tapOn: "Email / username"
+- inputText: ${AKUN}
+- tapOn: "Masukkan kata sandi"
+- inputText: ${SANDI}
+- hideKeyboard
+
+- tapOn:
+    text: "^Masuk$"
+
+# Role routing is driven by `peran` from the API, never guessed client-side.
+- assertVisible:
+    text: ".*${NAMA}.*"
+    timeout: 20000

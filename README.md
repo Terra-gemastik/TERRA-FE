@@ -256,6 +256,17 @@ Mirroring the backend (PRD §3.2):
 
 ## Known gaps
 
+- **A farmer cannot mark an offer as distributed.** `useTandaiTersalurkan`
+  exists in `hooks/useOffers.ts` but no screen calls it, so `POST
+  /penawaran/{id}/tersalurkan` is unreachable. The impact dashboard computes
+  `tingkat_penyaluran` as `tersalurkan / dibuat`, which means **that metric is
+  permanently 0 for real users** — it only looks right today because the seed
+  hard-codes some offers to that status. Surfaced by endpoint-coverage
+  analysis of the smoke flow.
+- **Location cannot be changed after signup.** `usePerbaruiLokasi` is likewise
+  unused, leaving `PATCH /onboarding/saya/lokasi` unreachable (PRD A-02).
+- **`daftarPembeliTerdaftar` is unused** — dead code, or a screen that was
+  never built.
 - **Share cards produce no WhatsApp link preview.** PRD §6.7's criterion needs
   a public HTML page with OG tags; this product has no web surface by decision.
   Sharing text + image URL + deep link works.
@@ -268,6 +279,77 @@ Mirroring the backend (PRD §3.2):
   reload. The product targets Android.
 
 ---
+
+## Smoke flow
+
+`e2e/smoke_web.mjs` drives the app in a real browser and asserts each screen
+renders what the API returned — the counterpart to the backend's
+`scripts/smoke_flow.py`, which walks the API itself. Between them: the API
+behaves, and the app shows it.
+
+```bash
+npm run smoke          # run it (headless, ~40s)
+npm run smoke:watch    # same run in a visible browser, slowed down to watch
+npm run smoke:video    # same run, recorded to e2e/rekaman/*.webm
+npm run smoke:build    # rebuild the web bundle after changing code
+```
+
+No emulator, no device, no Android SDK. It builds the web bundle, serves it,
+and walks: login as farmer → seeded offer → recommendations → buyer matches →
+open-data venues → share card → login as buyer → browse all supply. Steps print
+as they pass and it exits non-zero on the first failure.
+
+Needs a seeded backend reachable at `EXPO_PUBLIC_API_URL`.
+
+**Two things about it that are not obvious:**
+
+- **The test browser runs with `--disable-web-security`.** The backend
+  registers no CORS middleware, deliberately — it serves a native app, and
+  native runtimes do not enforce CORS. A browser does, so without this every
+  request is blocked before it leaves the page. Disabling it in a throwaway
+  test browser beats widening a live API's surface for a test's benefit.
+- **`page.goBack()` does not work here.** React Navigation's native-stack
+  pushes no browser history entries, so the browser's back button leaves the
+  SPA and lands on `about:blank`. Use the header's own control —
+  `getByRole("button", { name: "Go back" })`, wrapped as `kembali()`.
+
+Selectors go through `getByRole("button", { name })`, because `components/ui`
+sets `accessibilityLabel` on every button and native-stack keeps previous
+screens mounted at `0x0` — a plain text lookup can match a button on a screen
+that is no longer on top.
+
+### Coverage
+
+21 of 40 endpoints (52%), including 5 write paths: registration for both
+roles, posting and closing a demand, and a community post. Combined with the
+backend's `scripts/smoke_flow.py`, **39 of 40 (97%)** are exercised.
+
+Write steps register **throwaway accounts** (`Uji Smoke …`) and act only on
+data those accounts own. Recording a deal or filing a report as
+`demo-petani-1` would shift that account's reputation on every run and erode
+the F-06 contrast the seed sets up, so the flow deliberately never does that —
+`smoke_flow.py` covers those paths instead.
+
+Twelve writes are unreachable from a browser and always will be:
+
+| Blocked by | Endpoints |
+|---|---|
+| Camera (PRD F-01 forbids a gallery path) | `POST /klasifikasi`, `/klasifikasi/manual`, `/penawaran` — and therefore `/transaksi*` and `/laporan*`, which need an offer first |
+| `navigator.share` absent headless | `POST /penawaran/{id}/kartu/dibagikan` |
+| No screen calls the hook | `POST /penawaran/{id}/tersalurkan`, `PATCH /onboarding/saya/lokasi` |
+
+That last row is a **product gap, not a test gap** — see "Known gaps".
+
+### What passing here does not prove
+
+Web is not the shipping platform. Untested by this flow: session persistence
+(`auth/storage.ts` no-ops SecureStore on web, so a reload always signs you
+out), camera capture and geotagging, and native navigation/performance on
+low-end Android.
+
+`.maestro/` holds equivalent flows for a real device (`npm run smoke:device`,
+needs [Maestro](https://maestro.dev/docs) plus an emulator) to cover exactly
+those. They have not been run on this machine.
 
 ## Verification status
 

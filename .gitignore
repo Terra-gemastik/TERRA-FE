@@ -43,3 +43,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# web build + failure screenshot used by e2e/smoke_web.mjs
+dist-web/
+e2e/gagal.png
+e2e/rekaman/

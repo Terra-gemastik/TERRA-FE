@@ -1,0 +1,57 @@
+# Buyer journey: the pull path and the reverse flow.
+#
+# Mirrors steps 7-8 of `npm run smoke`, then goes further than the web flow by
+# posting a demand — that writes real data, which is easier to justify on a
+# device run than on every web run.
+appId: ${APP_ID}
+---
+- runFlow:
+    file: shared-masuk.yaml
+    env:
+      AKUN: sambal                # CV Saus Lembang — pengolah pangan
+      SANDI: terra123
+      NAMA: "Pasokan yang cocok dengan permintaan Anda."
+
+- assertVisible: "Pasang permintaan baru"
+
+# --------------------------------------------------------- browse (pull) ---
+# The home screen above shows only supply that matched THIS buyer's demand.
+# This screen shows everything, so an empty home can be told apart from an
+# empty market. The carrots appear here despite never matching a saus demand.
+- tapOn: "Jelajahi semua pasokan"
+- assertVisible:
+    text: "Semua pasokan terbuka"
+    timeout: 20000
+- assertVisible: "Wortel.*"
+- assertVisible: "Saring komoditas"
+- back
+
+# ------------------------------------------------------- post a demand ---
+# PRD E-01. Writes to the database — run against a demo instance only.
+- tapOn: "Pasang permintaan baru"
+- assertVisible:
+    text: "Komoditas dicari"
+    timeout: 20000
+
+# Chips rather than dropdowns, chosen for low-end Android (NF-05).
+- tapOn: "Tomat"
+
+- scrollUntilVisible:
+    element:
+      text: "Volume dibutuhkan"
+    direction: DOWN
+- tapOn: "Volume dibutuhkan"
+- inputText: "500"
+- hideKeyboard
+
+- scrollUntilVisible:
+    element:
+      text: "^Pasang permintaan$"
+    direction: DOWN
+- tapOn:
+    text: "^Pasang permintaan$"
+
+# Back on the buyer home once it saves.
+- assertVisible:
+    text: "Pasokan yang cocok dengan permintaan Anda."
+    timeout: 20000

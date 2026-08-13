@@ -1,0 +1,61 @@
+# Farmer journey: the expert system, end to end, on a real device.
+#
+# Mirrors steps 1-6 of `npm run smoke` (e2e/smoke_web.mjs). The assertions are
+# the same, so a divergence between this and the web run points at something
+# genuinely native — session handling, navigation, or rendering.
+#
+# Starts from the SEEDED offer `pnw_aktif_2` (120 kg of severely bruised
+# carrots). Not from the camera: PRD F-01 forbids a gallery path, so no fixture
+# photo can be injected. See README.md in this folder.
+appId: ${APP_ID}
+---
+- runFlow:
+    file: shared-masuk.yaml
+    env:
+      AKUN: budi
+      SANDI: terra123
+      NAMA: "Pak Dedi Supriadi"
+
+- assertVisible: "Tambah hasil panen"
+
+# -------------------------------------------------------------- offer ---
+# Urgent listings sort first (H-02), so the carrots lead.
+- assertVisible: "Wortel.*120 kg"
+- assertVisible: "Mendesak"
+- tapOn: "Wortel.*120 kg"
+
+# ----------------------------------------------------- recommendations ---
+# C-01/C-02: options with a value range and effort level.
+# NF-06: each option names the rule it came from.
+- assertVisible:
+    text: "Pakan ternak.*"
+    timeout: 20000
+- assertVisible: "Dasar: Aturan WOR-K1-K2-BERAT.*"
+
+# -------------------------------------------------------------- buyers ---
+# D-02..D-04. The compost buyer clears the 100 kg floor; the juice buyer is
+# rejected on severity, and the API says so rather than silently omitting it.
+- tapOn: "Lihat pembeli terdekat"
+- assertVisible:
+    text: "Kompos Hijau Cimahi"
+    timeout: 20000
+- assertVisible: "keparahan melebihi batas pembeli"
+- back
+
+# -------------------------------------------------------------- venues ---
+# The fallback when nobody is registered nearby. ODbL requires the attribution
+# to be on screen wherever this data is shown — asserting it keeps that honest.
+- tapOn: "Tempat penyaluran di sekitar"
+- assertVisible:
+    text: "Tempat terdekat"
+    timeout: 20000
+- assertVisible: ".*OpenStreetMap contributors.*"
+- back
+
+# ---------------------------------------------------------- share card ---
+# G-01: coarse location only. A precise pin must never reach a public group.
+- tapOn: "Bagikan kartu penawaran"
+- assertVisible:
+    text: "Teks yang akan dibagikan"
+    timeout: 20000
+- assertVisible: ".*Lembang.*"
