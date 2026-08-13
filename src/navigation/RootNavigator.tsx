@@ -27,6 +27,7 @@ import { VenuesScreen } from "@/screens/farmer/VenuesScreen";
 import { ShareCardScreen } from "@/screens/farmer/ShareCardScreen";
 import { LoginScreen } from "@/screens/auth/LoginScreen";
 import { RegisterScreen } from "@/screens/auth/RegisterScreen";
+import { EditLocationScreen } from "@/screens/shared/EditLocationScreen";
 import { ImpactScreen } from "@/screens/shared/ImpactScreen";
 import { MismatchReportScreen } from "@/screens/shared/MismatchReportScreen";
 import { TransactionsScreen } from "@/screens/shared/TransactionsScreen";
@@ -159,6 +160,11 @@ export function RootNavigator() {
                 name="LaporanKetidaksesuaian"
                 component={MismatchReportScreen}
                 options={{ title: "Laporkan ketidaksesuaian" }}
+              />
+              <Stack.Screen
+                name="UbahLokasi"
+                component={EditLocationScreen}
+                options={{ title: "Ubah lokasi" }}
               />
               <Stack.Screen
                 name="Dampak"

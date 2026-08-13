@@ -11,10 +11,13 @@ import { useNavigation, useRoute, type RouteProp } from "@react-navigation/nativ
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { View } from "react-native";
 
+import { useState } from "react";
+
 import {
   Badge,
   Button,
   Card,
+  ErrorState,
   KeyValue,
   QueryState,
   Screen,
@@ -22,7 +25,7 @@ import {
   Stack,
   Text,
 } from "@/components/ui";
-import { usePenawaran } from "@/hooks/useOffers";
+import { usePenawaran, useTandaiTersalurkan } from "@/hooks/useOffers";
 import { useRekomendasi } from "@/hooks/useRecommendations";
 import { LABEL_KOMODITAS, LABEL_UPAYA } from "@/lib/domain";
 import { kilogram, rentangRupiah } from "@/lib/format";
@@ -35,6 +38,18 @@ export function RecommendationsScreen() {
 
   const penawaran = usePenawaran(params.idPenawaran);
   const rekomendasi = useRekomendasi(params.idPenawaran);
+  const tandaiTersalurkan = useTandaiTersalurkan();
+  const [galatTandai, setGalatTandai] = useState<unknown>(null);
+
+  /** PRD I-01: closing an offer is what makes it count toward impact. */
+  const tandai = async () => {
+    setGalatTandai(null);
+    try {
+      await tandaiTersalurkan.mutateAsync(params.idPenawaran);
+    } catch (e) {
+      setGalatTandai(e);
+    }
+  };
 
   const opsi = rekomendasi.data?.opsi ?? [];
 
@@ -166,7 +181,43 @@ export function RecommendationsScreen() {
             })
           }
         />
+
+        {/*
+          PRD I-01. The impact dashboard reports `tingkat_penyaluran` as
+          tersalurkan / dibuat, so until a farmer can actually set that status
+          the figure stays at zero no matter how much they sell. This button is
+          the only place in the app that closes an offer.
+
+          Shown only while the offer is still open — once it is `tersalurkan`
+          the card above replaces it with a confirmation.
+        */}
+        {penawaran.data && penawaran.data.status !== "tersalurkan" ? (
+          <Button
+            label="Tandai sudah tersalurkan"
+            variant="secondary"
+            icon="checkmark-done-outline"
+            loading={tandaiTersalurkan.isPending}
+            onPress={() => void tandai()}
+          />
+        ) : null}
       </Stack>
+
+      {penawaran.data?.status === "tersalurkan" ? (
+        <Card
+          tone="success"
+          title="Penawaran sudah tersalurkan"
+          subtitle="Panen ini dihitung dalam dasbor dampak Anda."
+          className="mt-gutter"
+        />
+      ) : null}
+
+      {galatTandai ? (
+        <ErrorState
+          error={galatTandai}
+          title="Gagal menandai"
+          onRetry={() => void tandai()}
+        />
+      ) : null}
 
       {rekomendasi.data ? (
         <Text variant="caption" tone="muted" className="mt-gutter">

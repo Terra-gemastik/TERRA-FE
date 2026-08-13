@@ -92,3 +92,20 @@ export function useKecocokanSaya() {
     },
   };
 }
+
+/**
+ * Matches already recorded for one offer — PRD E-02/E-03.
+ *
+ * Distinct from `useCariPembeli`, which recomputes candidates live. These rows
+ * were written when the offer was published and a buyer was notified, so they
+ * are the farmer's evidence that the reverse flow actually reached someone.
+ */
+export function useKecocokanPenawaran(
+  idPenawaran: string | undefined,
+): UseQueryResult<KecocokanTercatat[]> {
+  return useQuery<KecocokanTercatat[]>({
+    queryKey: kunci.pencocokan.penawaran(idPenawaran ?? ""),
+    queryFn: () => pencocokan.kecocokanPenawaran(idPenawaran!),
+    enabled: Boolean(idPenawaran),
+  });
+}

@@ -23,7 +23,7 @@ import {
   Stack,
   Text,
 } from "@/components/ui";
-import { useCariPembeli } from "@/hooks/useMatches";
+import { useCariPembeli, useKecocokanPenawaran } from "@/hooks/useMatches";
 import { LABEL_JENIS_USAHA } from "@/lib/domain";
 import { kilogram, kilometer, rentangRupiah } from "@/lib/format";
 import type { RootStackParamList } from "@/navigation/types";
@@ -34,6 +34,9 @@ export function MatchesScreen() {
   const { params } = useRoute<RouteProp<RootStackParamList, "Pencocokan">>();
 
   const pencocokan = useCariPembeli(params.idPenawaran);
+  // E-02/E-03: buyers already notified when this offer was published. The list
+  // above is recomputed live; this one is the record of who was actually told.
+  const tercatat = useKecocokanPenawaran(params.idPenawaran);
   const pembeli = pencocokan.data?.pembeli ?? [];
   const penyaringan = pencocokan.data?.ringkasan_penyaringan ?? {};
 
@@ -140,6 +143,36 @@ export function MatchesScreen() {
           </Stack>
         </QueryState>
       </View>
+
+      {(tercatat.data?.length ?? 0) > 0 ? (
+        <>
+          <SectionHeader
+            title="Sudah diberi tahu"
+            description="Pembeli yang menerima notifikasi saat penawaran ini terbit."
+            className="mt-section"
+          />
+          <Stack gap="snug" className="mt-gutter">
+            {(tercatat.data ?? []).map((k) => (
+              <ListItem
+                key={k.id_kecocokan}
+                title={`${kilometer(k.jarak_km)} · relevansi ${k.skor_relevansi.toFixed(2)}`}
+                subtitle={
+                  k.arah === "balik"
+                    ? "Cocok otomatis dengan permintaan yang sudah dipasang"
+                    : "Tercatat dari pencarian Anda"
+                }
+                badges={
+                  <Badge
+                    label={k.arah === "balik" ? "Notifikasi terkirim" : "Pencarian"}
+                    tone={k.arah === "balik" ? "success" : "neutral"}
+                    icon="notifications-outline"
+                  />
+                }
+              />
+            ))}
+          </Stack>
+        </>
+      ) : null}
 
       <Text variant="caption" tone="muted" className="mt-section">
         Jarak dipakai untuk menyaring radius dan mengurutkan kedekatan saja.

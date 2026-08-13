@@ -52,7 +52,12 @@ export function MismatchReportScreen() {
         ...sebelum,
         {
           url: hasil.foto.uri,
-          waktu_ambil: hasil.waktuAmbil,
+          // `waktuAmbil` is optional since gallery photos may carry no EXIF
+          // timestamp. This screen only ever uses the camera, so it is always
+          // set in practice; falling back to "now" keeps the required field
+          // honest (it is genuinely when the report was filed) rather than
+          // inventing a capture time.
+          waktu_ambil: hasil.waktuAmbil ?? new Date().toISOString(),
           latitude: hasil.latitude ?? null,
           longitude: hasil.longitude ?? null,
         },

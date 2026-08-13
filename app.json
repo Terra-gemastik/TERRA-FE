@@ -28,8 +28,8 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "TERRA membutuhkan kamera untuk memotret hasil panen. Foto harus diambil langsung di aplikasi agar waktu dan lokasinya tercatat.",
-          "photosPermission": "TERRA tidak mengambil foto dari galeri. Izin ini hanya diminta oleh sistem."
+          "cameraPermission": "TERRA membutuhkan kamera untuk memotret hasil panen. Foto dari kamera otomatis membawa waktu dan lokasi, sehingga kondisinya bisa diverifikasi pembeli.",
+          "photosPermission": "TERRA membutuhkan akses galeri agar Anda bisa memilih foto panen yang sudah diambil sebelumnya. Foto galeri hanya terverifikasi bila berkasnya masih menyimpan data lokasi."
         }
       ],
       [

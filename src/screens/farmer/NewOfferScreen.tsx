@@ -35,17 +35,19 @@ import {
   OPSI_PENYIMPANAN,
   kombinasiValid,
 } from "@/lib/domain";
-import { KameraDitolak, TangkapanDibatalkan, tangkapFoto } from "@/lib/media";
+import {
+  GaleriDitolak,
+  KameraDitolak,
+  TangkapanDibatalkan,
+  pilihDariGaleri,
+  tangkapFoto,
+  type HasilTangkapan,
+} from "@/lib/media";
 import type { RootStackParamList } from "@/navigation/types";
 
 const MAKS_FOTO = 3; // PRD B-01
 
-type FotoTertangkap = {
-  foto: FotoUnggah;
-  waktuAmbil: string;
-  latitude?: number;
-  longitude?: number;
-};
+type FotoTertangkap = HasilTangkapan;
 
 export function NewOfferScreen() {
   const navigation =
@@ -64,22 +66,21 @@ export function NewOfferScreen() {
   const kombinasiSalah =
     komoditas && pemicu ? !kombinasiValid(komoditas, pemicu) : false;
 
-  const ambilFoto = async () => {
+  const tambah = async (ambil: () => Promise<HasilTangkapan[]>) => {
     setGalat(null);
     try {
-      const hasil = await tangkapFoto();
-      setFoto((sebelum) => [...sebelum, hasil]);
-      setPeringatan(hasil.peringatanLokasi ?? null);
+      const baru = await ambil();
+      setFoto((sebelum) => [...sebelum, ...baru].slice(0, MAKS_FOTO));
+      setPeringatan(baru.find((b) => b.peringatanLokasi)?.peringatanLokasi ?? null);
     } catch (e) {
       // Cancelling is a normal choice, not an error worth showing.
       if (e instanceof TangkapanDibatalkan) return;
-      if (e instanceof KameraDitolak) {
-        setGalat(e);
-        return;
-      }
-      setGalat(e);
+      setGalat(e); // KameraDitolak / GaleriDitolak carry their own message
     }
   };
+
+  const ambilFoto = () => tambah(async () => [await tangkapFoto()]);
+  const ambilDariGaleri = () => tambah(() => pilihDariGaleri(MAKS_FOTO - foto.length));
 
   const volumeAngka = Number(volume.replace(",", "."));
   const bolehLanjut =
@@ -95,7 +96,14 @@ export function NewOfferScreen() {
     setGalat(null);
 
     try {
-      const utama = foto[0];
+      // Mixed sources are allowed, so pick the strongest metadata rather than
+      // whichever photo happens to be first: a camera capture is the most
+      // trustworthy, then any photo that still carries coordinates.
+      const utama =
+        foto.find((f) => f.sumber === "kamera" && f.latitude !== undefined) ??
+        foto.find((f) => f.latitude !== undefined) ??
+        foto.find((f) => f.waktuAmbil) ??
+        foto[0];
       const hasil = await klasifikasi.mutateAsync({
         komoditas,
         pemicu,
@@ -152,11 +160,12 @@ export function NewOfferScreen() {
 
         <Card
           title="Foto panen"
-          subtitle={`${foto.length}/${MAKS_FOTO} foto. Diambil langsung lewat kamera.`}
+          subtitle={`${foto.length}/${MAKS_FOTO} foto. Bisa dari kamera atau galeri.`}
         >
           <Text variant="caption" tone="muted" className="mt-snug">
-            Foto harus diambil di aplikasi agar waktu dan lokasinya tercatat —
-            itu yang membuat kondisi panen bisa diverifikasi pembeli.
+            Foto dari kamera otomatis membawa waktu dan lokasi, sehingga kondisi
+            panen bisa diverifikasi pembeli. Foto dari galeri hanya terverifikasi
+            bila berkasnya masih menyimpan data lokasi.
           </Text>
 
           {foto.length > 0 ? (
@@ -175,6 +184,29 @@ export function NewOfferScreen() {
                     source={{ uri: f.foto.uri }}
                     className="h-20 w-20 rounded-control"
                   />
+                  {/*
+                    Provenance is shown per photo, not summarised, because a
+                    farmer mixing one camera shot with two gallery images
+                    should be able to see which of them carries the location
+                    the buyer will be told about.
+                  */}
+                  <Badge
+                    label={
+                      f.sumber === "kamera"
+                        ? "Kamera"
+                        : f.latitude !== undefined
+                          ? "Galeri · berlokasi"
+                          : "Galeri · tanpa lokasi"
+                    }
+                    tone={
+                      f.sumber === "kamera"
+                        ? "success"
+                        : f.latitude !== undefined
+                          ? "info"
+                          : "warning"
+                    }
+                    className="mt-tight"
+                  />
                   <Text variant="caption" tone="muted" className="mt-tight">
                     Ketuk untuk hapus
                   </Text>
@@ -187,14 +219,25 @@ export function NewOfferScreen() {
             <Badge label={peringatan} tone="warning" className="mt-snug" />
           ) : null}
 
-          <View className="mt-gutter">
-            <Button
-              label={foto.length === 0 ? "Ambil foto" : "Tambah foto"}
-              variant="secondary"
-              icon="camera-outline"
-              disabled={foto.length >= MAKS_FOTO}
-              onPress={() => void ambilFoto()}
-            />
+          <View className="mt-gutter flex-row">
+            <View className="mr-snug flex-1">
+              <Button
+                label={foto.length === 0 ? "Ambil foto" : "Tambah foto"}
+                variant="secondary"
+                icon="camera-outline"
+                disabled={foto.length >= MAKS_FOTO}
+                onPress={() => void ambilFoto()}
+              />
+            </View>
+            <View className="flex-1">
+              <Button
+                label="Dari galeri"
+                variant="secondary"
+                icon="images-outline"
+                disabled={foto.length >= MAKS_FOTO}
+                onPress={() => void ambilDariGaleri()}
+              />
+            </View>
           </View>
         </Card>
 

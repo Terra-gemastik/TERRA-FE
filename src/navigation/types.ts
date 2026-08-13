@@ -58,6 +58,9 @@ export type RootStackParamList = {
   // -- buyer flow (PRD §10.2)
   PasangPermintaan: undefined;
 
+  /** Edit registered location (A-02). Reached from Profil. */
+  UbahLokasi: undefined;
+
   // -- shared
   Transaksi: undefined;
   LaporanKetidaksesuaian: { idTransaksi: string };

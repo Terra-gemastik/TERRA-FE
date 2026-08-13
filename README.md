@@ -169,7 +169,7 @@ src/
   components/ui/          ★ RESKIN SURFACE 2 — primitives
   navigation/             role-based root + farmer/buyer tabs
   screens/   auth · farmer · buyer · shared
-  lib/       domain.ts (labels) · format.ts · media.ts (camera + geotag)
+  lib/       domain.ts (labels) · format.ts · media.ts (camera/gallery + geotag)
 scripts/     generate-api-types.mjs · check-raw-classes.mjs
 ```
 
@@ -183,7 +183,7 @@ a reskin. If it would, that is a structural bug.
 **Auth** — Login (token entry + demo chips), Register (role selection first,
 then role-specific fields).
 
-**Farmer** — Home (own offers, urgent first) · New Offer (in-app camera,
+**Farmer** — Home (own offers, urgent first) · New Offer (camera or gallery,
 commodity, trigger, volume, storage) · Classification Result · Recommendations ·
 Buyer Matches · Buyer Detail (reputation, WhatsApp, record a deal) · Venues
 (nearby pasar/peternak from open data) · Share Card.
@@ -217,12 +217,35 @@ Transactions (rate, cancel, report) · Mismatch Report · Impact Dashboard.
 
 ### Photo capture
 
-`expo-image-picker` in **camera mode only** — there is deliberately no gallery
-path. PRD F-01 requires in-app capture so the timestamp and coordinates on an
-offer are real, and a gallery picker would undermine the trust layer built on
-that metadata. `expo-location` attaches coordinates at capture time; denying
-location still lets you publish, it just marks the classification as
-unverified.
+`expo-image-picker` in **both modes**: in-app camera, and gallery with
+multi-select. 1–3 photos per listing (PRD B-01).
+
+PRD F-01 used to forbid the gallery, so an offer's timestamp and coordinates
+were guaranteed genuine. That was relaxed — farmers shoot harvest away from
+signal and in bulk — but the guarantee is not faked to compensate. Provenance
+is tracked per photo:
+
+| Source | Metadata | Badge |
+|---|---|---|
+| Camera | device time + `expo-location` coordinates | `Kamera` (green) |
+| Gallery **with** EXIF | timestamp + GPS read from the file | `Galeri · berlokasi` (blue) |
+| Gallery **without** EXIF | none — nothing is substituted | `Galeri · tanpa lokasi` (amber) |
+
+`lib/media.ts` reads EXIF defensively: platforms disagree on whether GPS comes
+back signed or as magnitude + N/S/E/W, and `0,0` means "field present but
+empty". Anything unparseable yields **no coordinate at all** rather than a
+guess — a wrong coordinate is worse than a missing one, because the backend
+would compare it to the farmer's registered location and flag an honest photo
+as suspicious (F-02).
+
+When sources are mixed, the classification call sends the strongest available
+metadata: a camera photo with coordinates first, then any photo with
+coordinates, then any with a timestamp.
+
+The backend needed no change. `_verifikasi` already sets `metadata_lengkap:
+false` when any photo lacks a timestamp or coordinates, and its own schema
+notes that the server can never prove a photo came from the camera. The claim
+degrades with the evidence.
 
 Upload is `multipart/form-data` with `foto` repeated per file plus flat text
 fields, matching the schema exactly. **Images are never base64-encoded into
@@ -320,25 +343,49 @@ that is no longer on top.
 
 ### Coverage
 
-21 of 40 endpoints (52%), including 5 write paths: registration for both
-roles, posting and closing a demand, and a community post. Combined with the
-backend's `scripts/smoke_flow.py`, **39 of 40 (97%)** are exercised.
+**23 of 40 endpoints (57%), including 8 writes.** Combined with the backend's
+`scripts/smoke_flow.py`: **40 of 40 (100%)**.
 
-Write steps register **throwaway accounts** (`Uji Smoke …`) and act only on
-data those accounts own. Recording a deal or filing a report as
-`demo-petani-1` would shift that account's reputation on every run and erode
-the F-06 contrast the seed sets up, so the flow deliberately never does that —
-`smoke_flow.py` covers those paths instead.
+The write path runs end to end through the UI — register buyer → post demand →
+register farmer → attach a gallery photo → classify → publish → match → record
+a transaction → complete it with a rating → post to the community board.
 
-Twelve writes are unreachable from a browser and always will be:
+Two things make that possible, and both are worth knowing:
 
-| Blocked by | Endpoints |
+- **Gallery input.** Once F-01 was relaxed to allow it, `expo-image-picker` on
+  web opens a real file dialog, which Playwright answers through the
+  `filechooser` event. That single interception is what unlocks publishing —
+  and therefore transactions, which need an offer to exist first. The camera
+  has no web equivalent, so before that change none of this was reachable.
+- **Classifier retries.** The mock puts roughly 1 in 8 results below the
+  confidence threshold, where B-06 correctly refuses to publish. The flow
+  retries with a different fixture (each has distinct bytes, so each gives a
+  different deterministic result) rather than treating a working guard as a
+  failure.
+
+Writes run entirely between **throwaway accounts the flow registers itself**
+(`Uji Smoke …`). Recording a deal as `demo-petani-1` would move that account's
+reputation on every run and erode the F-06 contrast the seed exists to show.
+
+#### Write assertions check the network, not the tap
+
+`pastikan("POST", "/transaksi", …)` fails unless a 2xx for that call appears in
+the response log. This is not belt-and-braces: every form here validates and
+returns early when a field is missing, so the tap succeeds, no request is sent,
+and nothing appears on screen. An earlier version printed "transaksi tercatat"
+in exactly that situation — the button had been tapped, `POST /transaksi` had
+never been issued, and the run passed green.
+
+#### What the remaining 17 need
+
+| Reason | Endpoints |
 |---|---|
-| Camera (PRD F-01 forbids a gallery path) | `POST /klasifikasi`, `/klasifikasi/manual`, `/penawaran` — and therefore `/transaksi*` and `/laporan*`, which need an offer first |
-| `navigator.share` absent headless | `POST /penawaran/{id}/kartu/dibagikan` |
-| No screen calls the hook | `POST /penawaran/{id}/tersalurkan`, `PATCH /onboarding/saya/lokasi` |
+| **App never calls them** — dead hooks with no screen | `POST /tersalurkan`, `PATCH /lokasi`, `GET /reputasi/{id}`, `GET /kecocokan`, `GET /onboarding/pembeli`, `POST /laporan/{id}/tinjau` |
+| **Needs `navigator.share`**, absent headless | `POST /kartu/dibagikan` |
+| **Not part of this journey** — reachable, just not walked | `POST /laporan`, `POST /batal`, `POST /tutup`, `GET /penawaran`, `POST /klasifikasi/manual`, `GET /klasifikasi/{id}` |
+| **Not called by any client** | `GET /health`, `/basis-aturan`, `/api/info` |
 
-That last row is a **product gap, not a test gap** — see "Known gaps".
+The first row is a **product gap, not a test gap** — see "Known gaps".
 
 ### What passing here does not prove
 

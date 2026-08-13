@@ -7,6 +7,8 @@
  * Paths and parameter names were taken from openapi.json, not from memory.
  */
 
+import { Platform } from "react-native";
+
 import { request } from "./client";
 import type * as T from "./types";
 
@@ -55,7 +57,7 @@ export const klasifikasi = {
    * `foto` repeated per file, plus flat text fields. Images are never
    * base64-encoded into JSON.
    */
-  otomatis: (masukan: {
+  otomatis: async (masukan: {
     komoditas: T.Komoditas;
     pemicu: T.Pemicu;
     foto: T.FotoUnggah[];
@@ -68,13 +70,21 @@ export const klasifikasi = {
     form.append("pemicu", masukan.pemicu);
 
     for (const f of masukan.foto) {
-      // React Native's FormData takes this {uri,name,type} shape for files;
-      // it is not the DOM File type, hence the cast.
-      form.append("foto", {
-        uri: f.uri,
-        name: f.nama,
-        type: f.tipe,
-      } as unknown as Blob);
+      if (Platform.OS === "web") {
+        // The {uri,name,type} shape below is a React Native convention, not a
+        // DOM one. On web `FormData.append` would stringify that object to
+        // "[object Object]" and the server would receive a text field where it
+        // expects a file — a silent 422 with no clue why. Resolve the blob:
+        // URI to a real File instead.
+        const blob = await fetch(f.uri).then((r) => r.blob());
+        form.append("foto", new File([blob], f.nama, { type: f.tipe || blob.type }));
+      } else {
+        form.append("foto", {
+          uri: f.uri,
+          name: f.nama,
+          type: f.tipe,
+        } as unknown as Blob);
+      }
     }
 
     if (masukan.waktuAmbil) form.append("waktu_ambil", masukan.waktuAmbil);
