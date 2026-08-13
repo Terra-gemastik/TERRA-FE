@@ -7,6 +7,7 @@ import type {
   HasilPencocokanResponse,
   KecocokanTercatat,
   PenawaranResponse,
+  TempatPenyaluranResponse,
 } from "@/api/types";
 
 import { kunci } from "./keys";
@@ -25,6 +26,25 @@ export function useCariPembeli(
   return useQuery<HasilPencocokanResponse>({
     queryKey: kunci.pencocokan.pembeli(idPenawaran ?? ""),
     queryFn: () => pencocokan.cariPembeli(idPenawaran!),
+    enabled: Boolean(idPenawaran),
+  });
+}
+
+/**
+ * Open-data venues near an offer — the answer to "nobody is registered near
+ * me, now what?".
+ *
+ * Separate from `useCariPembeli` on purpose: those are buyers who posted a
+ * demand, these are only places that exist. The response carries `atribusi`,
+ * which the screen is required to render (OpenStreetMap data is ODbL).
+ */
+export function useTempatPenyaluran(
+  idPenawaran: string | undefined,
+  radiusKm?: number,
+): UseQueryResult<TempatPenyaluranResponse> {
+  return useQuery<TempatPenyaluranResponse>({
+    queryKey: kunci.pencocokan.tempat(idPenawaran ?? "", radiusKm),
+    queryFn: () => pencocokan.tempatPenyaluran(idPenawaran!, radiusKm),
     enabled: Boolean(idPenawaran),
   });
 }

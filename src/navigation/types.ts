@@ -46,6 +46,8 @@ export type RootStackParamList = {
   HasilKlasifikasi: { hasil: KlasifikasiResponse; draf: DrafPenawaran };
   Rekomendasi: { idPenawaran: string };
   Pencocokan: { idPenawaran: string };
+  /** Open-data venues near an offer. Not buyers — see VenuesScreen. */
+  TempatPenyaluran: { idPenawaran: string };
   DetailPembeli: { idPenawaran: string; idPembeli: string; idPermintaan: string };
   KartuBerbagi: { idPenawaran: string };
 

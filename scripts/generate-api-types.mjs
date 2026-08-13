@@ -31,8 +31,20 @@ if (!existsSync(input)) {
 }
 
 console.log(`openapi.json → src/api/schema.d.ts`);
-execFileSync(
-  process.platform === "win32" ? "npx.cmd" : "npx",
-  ["openapi-typescript", input, "-o", output],
-  { stdio: "inherit", cwd: root },
-);
+
+// Call the package's own entry point through node rather than shelling out to
+// npx. Node >= 18.20 refuses to spawnSync a .cmd file without `shell: true`
+// (CVE-2024-27980), which broke `npx.cmd` on Windows; going through node
+// sidesteps the shell entirely and behaves the same on every platform.
+const cli = resolve(root, "node_modules/openapi-typescript/bin/cli.js");
+
+if (!existsSync(cli)) {
+  console.error("GAGAL: openapi-typescript belum terpasang.");
+  console.error("Jalankan `npm install` lebih dulu.");
+  process.exit(1);
+}
+
+execFileSync(process.execPath, [cli, input, "-o", output], {
+  stdio: "inherit",
+  cwd: root,
+});
