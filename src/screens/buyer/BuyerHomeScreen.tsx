@@ -91,12 +91,18 @@ export function BuyerHomeScreen() {
         </View>
       </View>
 
+      {/*
+        The pull path. Everything above this point only shows supply that
+        matched a demand the buyer posted, so a buyer with no active demand
+        (or too tight a radius) sees an empty screen and cannot tell whether
+        there is genuinely no supply. This is how they find out.
+      */}
       <View className="mt-gutter">
         <Button
-          label="Segarkan pasokan"
-          variant="ghost"
-          icon="refresh-outline"
-          onPress={refetch}
+          label="Jelajahi semua pasokan"
+          variant="secondary"
+          icon="search-outline"
+          onPress={() => navigation.navigate("JelajahPenawaran")}
         />
       </View>
 

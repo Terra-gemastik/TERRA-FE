@@ -42,6 +42,9 @@ export type RootStackParamList = {
   RootPetani: NavigatorScreenParams<TabPetaniParamList>;
   RootPembeli: NavigatorScreenParams<TabPembeliParamList>;
 
+  /** Buyer's pull path: all open supply, not just what matched their demand. */
+  JelajahPenawaran: undefined;
+
   // -- farmer flow (PRD §10.1)
   PenawaranBaru: undefined;
   HasilKlasifikasi: { hasil: KlasifikasiResponse; draf: DrafPenawaran };

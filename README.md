@@ -11,7 +11,7 @@ accent, system fonts, no illustrations. It is meant to be replaced wholesale by
 a designer without touching a single line of business logic — see
 [Reskinning](#reskinning).
 
-Backend repo: `../TERRA_GEMASTIK` (separate git repository).
+Backend repo: `../TERRA-BE` (separate git repository).
 
 ---
 
@@ -26,7 +26,7 @@ npm start                   # press 'a' for Android, or scan the QR
 The backend must be running and seeded:
 
 ```bash
-cd ../TERRA_GEMASTIK
+cd ../TERRA-BE
 python -m scripts.init_db --seed
 uvicorn terra.main:app --host 0.0.0.0 --port 8000
 ```
@@ -92,7 +92,7 @@ it via `openapi-typescript` — **never from memory**.
 ```bash
 # in the backend repo, after any request/response change:
 python -m scripts.export_openapi
-cp openapi.json ../TERRA_MOBILE/openapi.json
+cp openapi.json ../TERRA-FE/openapi.json
 
 # here:
 npm run generate:api      # openapi.json -> src/api/schema.d.ts
@@ -185,9 +185,32 @@ then role-specific fields).
 
 **Farmer** — Home (own offers, urgent first) · New Offer (in-app camera,
 commodity, trigger, volume, storage) · Classification Result · Recommendations ·
-Buyer Matches · Buyer Detail (reputation, WhatsApp, record a deal) · Share Card.
+Buyer Matches · Buyer Detail (reputation, WhatsApp, record a deal) · Venues
+(nearby pasar/peternak from open data) · Share Card.
 
-**Buyer** — Incoming supply (reverse matches) · Post Demand · My Demands.
+**Buyer** — Incoming supply (reverse matches) · Browse all supply · Post
+Demand · My Demands.
+
+### Push and pull are different screens
+
+Worth knowing before adding anything to either side:
+
+- **Buyer Home** is the *push* path — supply that matched a demand the buyer
+  posted, delivered without them searching. Empty when their demand is narrow.
+- **Browse all supply** is the *pull* path — every open offer, filterable by
+  commodity, ignoring the buyer's own filters. It exists so an empty home
+  screen doesn't read as "no supply exists."
+- **Buyer Matches** lists people who posted a demand. **Venues** lists places
+  that merely exist, from OpenStreetMap. They are separate screens with
+  separate types on purpose: a venue has no price, no reputation and no
+  contact, because nobody there has agreed to anything. Do not merge them.
+
+### Venue screen carries a licence obligation
+
+`VenuesScreen` renders OpenStreetMap data under **ODbL**, which makes
+attribution mandatory. The backend returns `atribusi` and `lisensi` in the
+payload and the screen prints them in the footer. **Keep that footer** — it is
+a licence term, not a design detail.
 
 **Shared** — Community board · Notifications · Profile (reputation + reports) ·
 Transactions (rate, cancel, report) · Mismatch Report · Impact Dashboard.
@@ -248,15 +271,18 @@ Mirroring the backend (PRD §3.2):
 
 ## Verification status
 
-Checked on this machine:
+Run `npm run check` (typecheck + token lint) before committing — screens under
+active redesign will fail it until their raw values are swapped for tokens.
 
-- `npm run typecheck` — **0 errors** across ~40 source files
-- `npm run lint:tokens` — **clean**, and proven to work: planting
-  `bg-green-600`, `text-lg` and `rounded-md` in a screen made it fail with all
-  three, then pass again once reverted
-- `npx expo export --platform android` — **bundles successfully** (3.9 MB
-  Hermes bytecode), which exercises the NativeWind babel/metro setup and every
-  import path
+- `npm run typecheck` — every screen builds against types generated from the
+  backend's own OpenAPI schema, so a renamed field upstream becomes a compile
+  error here rather than a runtime crash
+- `npm run lint:tokens` — proven to work: planting `bg-green-600`, `text-lg`
+  and `rounded-md` in a screen made it fail with all three, then pass again
+  once reverted
+- `npx expo export --platform android` — bundles successfully (3.9 MB Hermes
+  bytecode), which exercises the NativeWind babel/metro setup and every import
+  path
 - `npx expo config` — resolves; camera and location permission strings applied
 
 **Not done: running the app against a live backend.** That needs a device or

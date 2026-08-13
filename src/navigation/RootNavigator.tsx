@@ -16,6 +16,7 @@ import { View } from "react-native";
 
 import { useAuth } from "@/auth/AuthContext";
 import { LoadingSpinner, Text, temaNavigasi } from "@/components/ui";
+import { BrowseOffersScreen } from "@/screens/buyer/BrowseOffersScreen";
 import { PostDemandScreen } from "@/screens/buyer/PostDemandScreen";
 import { BuyerDetailScreen } from "@/screens/farmer/BuyerDetailScreen";
 import { ClassificationResultScreen } from "@/screens/farmer/ClassificationResultScreen";
@@ -141,6 +142,11 @@ export function RootNavigator() {
                 name="PasangPermintaan"
                 component={PostDemandScreen}
                 options={{ title: "Pasang permintaan" }}
+              />
+              <Stack.Screen
+                name="JelajahPenawaran"
+                component={BrowseOffersScreen}
+                options={{ title: "Jelajahi pasokan" }}
               />
 
               {/* Shared */}
