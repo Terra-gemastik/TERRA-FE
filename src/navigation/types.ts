@@ -36,6 +36,7 @@ export type RootStackParamList = {
   // -- unauthenticated
   Masuk: undefined;
   Daftar: undefined;
+  Welcome: undefined;
 
   // -- role roots
   RootPetani: NavigatorScreenParams<TabPetaniParamList>;

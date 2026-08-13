@@ -37,10 +37,10 @@ function Chip({
       accessibilityState={{ selected: terpilih }}
       onPress={onPress}
       className={[
-        "mb-snug mr-snug min-h-11 rounded-control border-hairline px-gutter py-2",
+        "mb-snug mr-snug min-h-11 rounded-control px-gutter py-2",
         terpilih
-          ? "border-brand-strong bg-brand-muted"
-          : "border-outline bg-surface",
+          ? "bg-brand-muted"
+          : "bg-surface-sunken",
       ].join(" ")}
     >
       <View className="flex-row items-center">

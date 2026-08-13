@@ -23,7 +23,7 @@ export function FarmerTabs() {
         headerShown: false,
         tabBarActiveTintColor: WARNA.inkPrimary,
         tabBarInactiveTintColor: WARNA.inkMuted,
-        tabBarActiveBackgroundColor: WARNA.accentBeigeMuted,
+        tabBarActiveBackgroundColor: WARNA.brandMuted,
         tabBarLabelStyle: {
           fontFamily: "Hanken Grotesk",
           fontSize: 12,

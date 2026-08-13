@@ -49,7 +49,7 @@ export function StatTile({
 }) {
   return (
     <View
-      className={`rounded-card border-hairline border-outline-subtle bg-surface p-gutter ${className}`}
+      className={`rounded-card bg-surface p-gutter ${className}`}
     >
       <Text variant="label" tone="secondary">
         {label}
