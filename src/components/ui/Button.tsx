@@ -15,23 +15,23 @@ export type VarianTombol = "primary" | "secondary" | "ghost" | "danger";
 export type UkuranTombol = "md" | "sm";
 
 const WADAH: Record<VarianTombol, string> = {
-  primary: "bg-surface-inverse border-thick border-surface-inverse",
-  secondary: "bg-surface border-hairline border-outline",
-  ghost: "bg-transparent border-hairline border-transparent",
-  danger: "bg-danger border-hairline border-danger",
+  primary: "bg-brand-primary",
+  secondary: "bg-surface-sunken",
+  ghost: "bg-transparent",
+  danger: "bg-danger",
 };
 
 const WADAH_NONAKTIF: Record<VarianTombol, string> = {
-  primary: "bg-surface-disabled border-hairline border-outline-subtle",
-  secondary: "bg-surface-disabled border-hairline border-outline-subtle",
-  ghost: "bg-transparent border-hairline border-transparent",
-  danger: "bg-surface-disabled border-hairline border-outline-subtle",
+  primary: "bg-surface-disabled",
+  secondary: "bg-surface-disabled",
+  ghost: "bg-transparent",
+  danger: "bg-surface-disabled",
 };
 
 const NADA_LABEL: Record<VarianTombol, NadaTeks> = {
   primary: "inverse",
   secondary: "primary",
-  ghost: "brand",
+  ghost: "primary",
   danger: "inverse",
 };
 
@@ -39,7 +39,7 @@ const NADA_LABEL: Record<VarianTombol, NadaTeks> = {
 const WARNA_IKON: Record<VarianTombol, string> = {
   primary: WARNA.inkInverse,
   secondary: WARNA.inkPrimary,
-  ghost: WARNA.brandStrong,
+  ghost: WARNA.brandPrimary,
   danger: WARNA.inkInverse,
 };
 

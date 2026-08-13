@@ -22,12 +22,12 @@ export type NadaBadge =
   | "info";
 
 const WADAH: Record<NadaBadge, string> = {
-  neutral: "bg-surface-sunken border-outline",
-  brand: "bg-brand-muted border-brand-strong",
-  danger: "bg-danger-surface border-danger",
-  warning: "bg-warning-surface border-warning",
-  success: "bg-success-surface border-success",
-  info: "bg-info-surface border-info",
+  neutral: "bg-surface-sunken",
+  brand: "bg-brand-muted",
+  danger: "bg-danger-surface",
+  warning: "bg-warning-surface",
+  success: "bg-success-surface",
+  info: "bg-info-surface",
 };
 
 const NADA_TEKS: Record<NadaBadge, NadaTeks> = {
@@ -74,7 +74,7 @@ export function Badge({
   return (
     <View
       className={[
-        "flex-row items-center self-start rounded-pill border-hairline px-snug py-tight",
+        "flex-row items-center self-start rounded-pill px-snug py-tight",
         WADAH[tone],
         className,
       ].join(" ")}

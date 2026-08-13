@@ -19,12 +19,12 @@ export type CardProps = {
 };
 
 const NADA_WADAH: Record<NonNullable<CardProps["tone"]>, string> = {
-  default: "bg-surface-raised border-outline-subtle",
-  danger: "bg-danger-surface border-danger",
-  warning: "bg-warning-surface border-warning",
-  success: "bg-success-surface border-success",
-  info: "bg-info-surface border-info",
-  brand: "bg-brand-primary border-brand-primary",
+  default: "bg-surface-raised",
+  danger: "bg-danger-surface",
+  warning: "bg-warning-surface",
+  success: "bg-success-surface",
+  info: "bg-info-surface",
+  brand: "bg-brand-muted",
 };
 
 export function Card({
@@ -56,7 +56,7 @@ export function Card({
   );
 
   const kelas = [
-    "rounded-card border-hairline p-gutter",
+    "rounded-card p-gutter",
     NADA_WADAH[tone],
     className,
   ].join(" ");

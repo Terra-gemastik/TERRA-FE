@@ -29,6 +29,7 @@ import { RegisterScreen } from "@/screens/auth/RegisterScreen";
 import { ImpactScreen } from "@/screens/shared/ImpactScreen";
 import { MismatchReportScreen } from "@/screens/shared/MismatchReportScreen";
 import { TransactionsScreen } from "@/screens/shared/TransactionsScreen";
+import { WelcomeScreen } from "@/screens/auth/WelcomeScreen";
 
 import { BuyerTabs } from "./BuyerTabs";
 import { FarmerTabs } from "./FarmerTabs";
@@ -60,12 +61,26 @@ export function RootNavigator() {
           }}
         >
           {!pengguna ? (
-            <Stack.Group screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="Masuk" component={LoginScreen} />
+            <Stack.Group>
+              <Stack.Screen
+                name="Welcome"
+                component={WelcomeScreen}
+                options={{ headerShown: false }}
+              />
+
+              <Stack.Screen
+                name="Masuk"
+                component={LoginScreen}
+                options={{ headerShown: false }}
+              />
+
               <Stack.Screen
                 name="Daftar"
                 component={RegisterScreen}
-                options={{ headerShown: true, title: "Buat akun" }}
+                options={{
+                  headerShown: true,
+                  title: "Buat akun",
+                }}
               />
             </Stack.Group>
           ) : (

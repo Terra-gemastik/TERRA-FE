@@ -39,48 +39,54 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        /** Muted blue-grey accent from the TERRA direction. */
+        /** Modern TERRA color scheme - sage green, golden yellow, coral, and dark brown */
         brand: {
-          DEFAULT: "#ABC3C9",
-          primary: "#ABC3C9",
-          strong: "#5F7F87",
-          muted: "#E7F0F1",
-          on: "#382119", // text/icon colour on top of brand
+          DEFAULT: "#ABC270",
+          primary: "#ABC270",
+          strong: "#8A9F5A",
+          muted: "#E8EDE0",
+          on: "#463C33", // text/icon colour on top of brand
         },
 
-        /** Backgrounds. */
+        /** Backgrounds - white to cream-ish */
         surface: {
-          DEFAULT: "#FFFCF6",
-          sunken: "#FAF6EC", // screen background behind cards
-          raised: "#FFFCF6", // cards, sheets
-          inverse: "#382119",
-          disabled: "#E8E5DC",
+          DEFAULT: "#FFFCF9",
+          sunken: "#F5F3EE",
+          raised: "#FFFFFF",
+          inverse: "#463C33",
+          disabled: "#EBE8E5",
         },
 
-        /** Foreground / text. "ink" rather than "text" so bg-ink-* also reads. */
+        /** Foreground / text - dark brown primary */
         ink: {
-          DEFAULT: "#382119",
-          primary: "#382119",
-          secondary: "#6E5B4B",
-          muted: "#8A7B6B",
-          inverse: "#FFFDF8",
-          disabled: "#A99F92",
-          "on-brand": "#382119",
+          DEFAULT: "#463C33",
+          primary: "#463C33",
+          secondary: "#6B5E52",
+          muted: "#8A7F78",
+          inverse: "#FFFEF8",
+          disabled: "#B5AEA7",
+          "on-brand": "#463C33",
         },
 
-        /** Borders and dividers. */
+        /** Borders and dividers - minimal, subtle */
         outline: {
-          DEFAULT: "#D6CDBB",
-          subtle: "#ECE5D8",
-          strong: "#B5A88F",
-          focus: "#5F7F87",
+          DEFAULT: "#D9D4CE",
+          subtle: "#EBE5DE",
+          strong: "#C5BBB0",
+          focus: "#ABC270",
+        },
+
+        /** Accents - golden yellow and coral */
+        accent: {
+          yellow: "#FEC868",
+          coral: "#FDA769",
         },
 
         /** Status. Each has a fill, a tinted background, and a readable text tone. */
-        danger: { DEFAULT: "#9D3B32", surface: "#F7E7E2", ink: "#6E231D" },
-        warning: { DEFAULT: "#9A6E22", surface: "#F4EAD2", ink: "#654511" },
-        success: { DEFAULT: "#55765F", surface: "#E8EFE7", ink: "#314C38" },
-        info: { DEFAULT: "#5F7F87", surface: "#EAF1F2", ink: "#314F56" },
+        danger: { DEFAULT: "#DA5A50", surface: "#F8E8E6", ink: "#6E231D" },
+        warning: { DEFAULT: "#FEC868", surface: "#FEF5E8", ink: "#654511" },
+        success: { DEFAULT: "#7CA86F", surface: "#E8EFE7", ink: "#314C38" },
+        info: { DEFAULT: "#ABC270", surface: "#E8EDE0", ink: "#463C33" },
       },
 
       fontFamily: {

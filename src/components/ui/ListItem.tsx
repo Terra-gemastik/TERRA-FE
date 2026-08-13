@@ -37,7 +37,7 @@ export function ListItem({
   const isi = (
     <View className="flex-row items-start">
       {icon ? (
-        <View className="mr-gutter mt-tight h-8 w-8 items-center justify-center rounded-control border-hairline border-outline bg-brand-muted">
+        <View className="mr-gutter mt-tight h-8 w-8 items-center justify-center rounded-control bg-brand-muted">
           <Ionicons name={icon} size={16} color={WARNA.inkSecondary} />
         </View>
       ) : null}
@@ -65,10 +65,10 @@ export function ListItem({
   );
 
   const kelas = [
-    "rounded-card border-hairline p-gutter",
+    "rounded-card p-gutter",
     highlighted
-      ? "border-thick border-brand-strong bg-brand-muted"
-      : "border-outline-subtle bg-surface",
+      ? "bg-brand-muted"
+      : "bg-surface",
     className,
   ].join(" ");
 

@@ -6,6 +6,9 @@ import { TextInput, View, type KeyboardTypeOptions } from "react-native";
 import { Text } from "./Text";
 import { WARNA } from "./tokens";
 
+// Map fontWeight to Hanken Grotesk font names
+const FONT_FAMILY = "Hanken Grotesk";
+
 export type TextFieldProps = {
   label: string;
   value: string;
@@ -48,16 +51,17 @@ export function TextField({
 
       <View
         className={[
-          "mt-tight min-h-12 flex-row items-center rounded-control border-hairline px-gutter",
+          "mt-tight min-h-12 flex-row items-center rounded-control px-gutter",
           error
-            ? "border-danger bg-danger-surface"
+            ? "bg-danger-surface"
             : fokus
-              ? "border-brand-strong bg-brand-muted"
-              : "border-outline bg-surface",
+              ? "bg-brand-muted"
+              : "bg-surface-raised",
           editable ? "" : "bg-surface-disabled",
         ].join(" ")}
       >
         <TextInput
+          style={{ fontFamily: FONT_FAMILY }}
           className={`flex-1 font-primary py-3 text-body text-ink-primary ${
             multiline ? "h-24" : ""
           }`}
