@@ -13,36 +13,36 @@
  */
 
 export const WARNA = {
-  brandPrimary: "#ABC3C9",
-  brandStrong: "#5F7F87",
-  brandMuted: "#E7F0F1",
-  accentBeige: "#CCBE9F",
-  accentBeigeMuted: "#E9DDBE",
+  brandPrimary: "#ABC270",
+  brandStrong: "#8A9F5A",
+  brandMuted: "#E8EDE0",
+  accentYellow: "#FEC868",
+  accentCoral: "#FDA769",
 
-  surface: "#FFFCF6",
-  surfaceSunken: "#FAF6EC",
+  surface: "#FFFCF9",
+  surfaceSunken: "#FAFBF8",
 
-  inkPrimary: "#382119",
-  inkSecondary: "#6E5B4B",
-  inkMuted: "#8A7B6B",
-  inkDisabled: "#A99F92",
-  inkInverse: "#FFFDF8",
+  inkPrimary: "#463C33",
+  inkSecondary: "#6B5E52",
+  inkMuted: "#8A7F78",
+  inkDisabled: "#B5AEA7",
+  inkInverse: "#FFFEF8",
 
-  outline: "#D6CDBB",
-  outlineSubtle: "#ECE5D8",
+  outline: "#D9D4CE",
+  outlineSubtle: "#EBE5DE",
 
-  danger: "#9D3B32",
+  danger: "#DA5A50",
   dangerInk: "#6E231D",
   warningInk: "#654511",
   successInk: "#314C38",
-  infoInk: "#314F56",
+  infoInk: "#463C33",
 } as const;
 
 /** Navigation theme, so headers and tab bars follow the same tokens. */
 export const temaNavigasi = {
   dark: false,
   colors: {
-    primary: WARNA.brandStrong,
+    primary: WARNA.brandPrimary,
     background: WARNA.surfaceSunken,
     card: WARNA.surface,
     text: WARNA.inkPrimary,

@@ -53,7 +53,7 @@ export function EmptyState({
   action?: { label: string; onPress: () => void };
 }) {
   return (
-    <View className="items-center rounded-card border-hairline border-outline-subtle bg-surface px-gutter py-section">
+    <View className="items-center rounded-card bg-surface px-gutter py-section">
       <Ionicons name={icon} size={28} color={WARNA.inkDisabled} />
       <Text variant="heading-sm" tone="secondary" className="mt-snug text-center">
         {title}
@@ -92,7 +92,7 @@ export function ErrorState({
     error instanceof Error ? error.message : "Kesalahan tidak diketahui.";
 
   return (
-    <View className="rounded-card border-hairline border-danger bg-danger-surface p-gutter">
+    <View className="rounded-card bg-danger-surface p-gutter">
       <View className="flex-row items-center">
         <Ionicons name="alert-circle-outline" size={18} color={WARNA.dangerInk} />
         <Text variant="heading-sm" tone="danger" className="ml-snug">

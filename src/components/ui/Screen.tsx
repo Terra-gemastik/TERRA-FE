@@ -77,7 +77,7 @@ export function Screen({
       )}
 
       {footer ? (
-        <View className="border-t-hairline border-outline-subtle bg-surface px-page py-gutter">
+        <View className="bg-surface px-page py-gutter">
           {footer}
         </View>
       ) : null}
