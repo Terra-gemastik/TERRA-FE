@@ -64,6 +64,18 @@ const REKAMAN = join(AKAR, "e2e", "rekaman");
  */
 const TAMPIL = process.argv.includes("--tampil");
 const REKAM = process.argv.includes("--rekam");
+
+/**
+ * Pacing.
+ *
+ * Headless runs go as fast as the app allows — nobody is watching. When a
+ * human IS watching (`--tampil`) or the run is being recorded (`--rekam`),
+ * every action is slowed and each step pauses, so the journey reads as a
+ * walkthrough of the product rather than a flicker.
+ */
+const PELAN = TAMPIL || REKAM;
+const JEDA_LANGKAH = PELAN ? 1800 : 0;
+const jeda = (ms) => new Promise((r) => setTimeout(r, ms));
 const LAYAR = { width: 414, height: 896 };
 
 const MIME = {
@@ -74,7 +86,11 @@ const MIME = {
 };
 
 let langkah = 0;
-const judul = (t) => console.log(`\n${"─".repeat(66)}\n${++langkah}. ${t}\n${"─".repeat(66)}`);
+const judul = async (t) => {
+  console.log(`\n${"─".repeat(66)}\n${++langkah}. ${t}\n${"─".repeat(66)}`);
+  // Watch/record modes pause between steps so the run reads as a walkthrough.
+  if (JEDA_LANGKAH) await jeda(JEDA_LANGKAH);
+};
 const baris = (k, v) => console.log(`  ${String(k).padEnd(22)} ${v}`);
 const ok = (t) => console.log(`  ✓ ${t}`);
 
@@ -295,7 +311,7 @@ async function jalankan() {
     viewport: LAYAR,
     headless: !TAMPIL,
     // Long enough to follow by eye, short enough not to be tedious.
-    slowMo: TAMPIL ? 350 : 0,
+    slowMo: PELAN ? 750 : 0,
     ...(REKAM ? { recordVideo: { dir: REKAMAN, size: LAYAR } } : {}),
   });
   const page = ctx.pages()[0] ?? (await ctx.newPage());
@@ -336,24 +352,24 @@ async function jalankan() {
   let keluar = 0;
   try {
     // -- 1 -----------------------------------------------------------------
-    judul("Masuk sebagai petani (peran menentukan tata letak tab)");
+    await judul("Masuk sebagai petani (peran menentukan tata letak tab)");
     await masuk(page, "budi", "terra123", "Pak Dedi Supriadi");
     await lihat(page, "Tambah hasil panen");
 
     // -- 2 -----------------------------------------------------------------
-    judul("Beranda petani: penawaran tersemai, yang mendesak lebih dulu");
+    await judul("Beranda petani: penawaran tersemai, yang mendesak lebih dulu");
     await lihat(page, "Wortel", { label: 'penawaran wortel (pnw_aktif_2) tampil' });
     await lihat(page, "Mendesak", { label: "penanda mendesak (H-02)" });
 
     // -- 3 -----------------------------------------------------------------
-    judul("Rekomendasi penyaluran (C-01, C-02, NF-06)");
+    await judul("Rekomendasi penyaluran (C-01, C-02, NF-06)");
     await page.getByText("Wortel", { exact: false }).filter({ visible: true }).first().click();
     await page.waitForTimeout(3500);
     await lihat(page, "Pakan ternak", { label: "opsi prioritas 1 dari WOR-K1-K2-BERAT" });
     await lihat(page, "WOR-K1-K2-BERAT", { label: "jejak aturan tampil (NF-06)" });
 
     // -- 4 -----------------------------------------------------------------
-    judul("Pembeli cocok (D-02 … D-04)");
+    await judul("Pembeli cocok (D-02 … D-04)");
     await tekan(page, "Lihat pembeli terdekat").click();
     await page.waitForTimeout(3500);
     await lihat(page, "Kompos Hijau Cimahi", { label: "pembeli yang lolos saringan" });
@@ -363,7 +379,7 @@ async function jalankan() {
     await kembali(page);
 
     // -- 5 -----------------------------------------------------------------
-    judul("Tempat penyaluran dari data terbuka (butuh backend ter-deploy)");
+    await judul("Tempat penyaluran dari data terbuka (butuh backend ter-deploy)");
     await tekan(page, "Tempat penyaluran di sekitar").click();
     await page.waitForTimeout(4000);
     const isiTempat = await page.evaluate(() => document.body.innerText);
@@ -377,7 +393,7 @@ async function jalankan() {
     await kembali(page);
 
     // -- 6 -----------------------------------------------------------------
-    judul("Kartu berbagi (G-01: lokasi umum saja, bukan titik persis)");
+    await judul("Kartu berbagi (G-01: lokasi umum saja, bukan titik persis)");
     await tekan(page, "Bagikan kartu penawaran").click();
     await page.waitForTimeout(3000);
     await lihat(page, "Teks yang akan dibagikan");
@@ -386,7 +402,7 @@ async function jalankan() {
     // -- 7 -----------------------------------------------------------------
     // Opening a buyer pulls their public profile and reputation -- F-07 says
     // the counterparty's standing must be visible BEFORE contact is made.
-    judul("Detail pembeli: reputasi terlihat sebelum kontak (D-05, F-07)");
+    await judul("Detail pembeli: reputasi terlihat sebelum kontak (D-05, F-07)");
     await kembali(page);
     await tekan(page, "Lihat pembeli terdekat").click();
     await page.waitForTimeout(3000);
@@ -396,7 +412,7 @@ async function jalankan() {
     await lihat(page, "Dasar peringkat", { label: "rincian skor pencocokan (NF-06)" });
 
     // -- 8 -----------------------------------------------------------------
-    judul("Layar bersama petani: komunitas, notifikasi, transaksi, dampak, profil");
+    await judul("Layar bersama petani: komunitas, notifikasi, transaksi, dampak, profil");
     await keTabs(page);
 
     await ketuk(page, "Komunitas");
@@ -417,31 +433,15 @@ async function jalankan() {
     await lihat(page, "Nilai terpulihkan", { timeout: 20000, label: "dasbor dampak (I-01)" });
 
     // -- 9 -----------------------------------------------------------------
-    judul("Masuk sebagai pembeli (cabang peran yang lain)");
+    await judul("Masuk sebagai pembeli (cabang peran yang lain)");
     await masuk(page, "sambal", "terra123", "Pasokan");
 
     // -- 8 -----------------------------------------------------------------
-    judul("Jalur tarik pembeli: jelajahi semua pasokan");
+    await judul("Jalur tarik pembeli: jelajahi semua pasokan");
     await tekan(page, "Jelajahi semua pasokan").click();
     await page.waitForTimeout(3000);
     await lihat(page, "Semua pasokan terbuka");
     await lihat(page, "Wortel", { label: "penawaran yang TIDAK cocok dengan permintaan pembeli ini pun tampil" });
-
-    // -- 11 ----------------------------------------------------------------
-    // Notifications are only created by a reverse match, so a fresh database
-    // may legitimately have none. Skip rather than fail in that case.
-    judul("Tandai notifikasi dibaca (H-01)");
-    await keTabs(page);              // Browse sits above the tab bar
-    await ketuk(page, "Notifikasi");
-    const notif = page.locator('[role="button"]:visible').filter({ hasText: /Pasokan|cocok|MENDESAK/i });
-    if (await notif.count()) {
-      await notif.first().click();
-      await page.waitForTimeout(2500);
-      pastikan("POST", "/dibaca", "notifikasi ditandai dibaca");
-    } else {
-      console.log("  ! belum ada notifikasi — dilewati, bukan gagal.");
-      console.log("    Notifikasi lahir dari pencocokan balik; publikasikan penawaran dulu.");
-    }
 
     // -- 12 ----------------------------------------------------------------
     // Everything from here writes, and it runs entirely between two accounts
@@ -450,7 +450,7 @@ async function jalankan() {
     // erode the F-06 contrast the seed exists to demonstrate.
     const tanda = Date.now().toString().slice(-6);
 
-    judul("TULIS: pembeli baru mendaftar dan memasang permintaan (A-03, E-01)");
+    await judul("TULIS: pembeli baru mendaftar dan memasang permintaan (A-03, E-01)");
     await daftar(page, { peran: "Pembeli / Mitra", nama: `Uji Smoke Pembeli ${tanda}` });
     await lihat(page, "Pasang permintaan baru", { label: "pendaftaran pembeli" });
 
@@ -478,8 +478,47 @@ async function jalankan() {
     await page.waitForTimeout(4000);
     pastikan("POST", "/permintaan", "permintaan dipasang");
 
+    // E-04, on a demand this flow owns. An earlier version closed the SEEDED
+    // `pmt_kompos` instead, which broke the transaction chain on every
+    // subsequent run and quietly degraded the demo data — a test must never
+    // consume the fixtures it depends on.
+    await keTabs(page);
+    await ketuk(page, "Permintaan");
+    const tutupUji = tekan(page, "Tutup");
+    const adaTutupUji = await tutupUji
+      .waitFor({ state: "visible", timeout: 15000 })
+      .then(() => true)
+      .catch(() => false);
+    if (adaTutupUji) {
+      await tutupUji.click();
+      await page.waitForTimeout(3500);
+      pastikan("POST", "/tutup", "permintaan ditutup");
+    }
+
+    // A second, still-open demand so the farmer's publish below has something
+    // to match and notify (E-02/E-03).
+    await keTabs(page);
+    await ketuk(page, "Pasokan");
+    await tekan(page, "Pasang permintaan baru").click();
+    await lihat(page, "Komoditas dicari", { timeout: 20000 });
+    await page.getByText("Tomat", { exact: true }).filter({ visible: true }).first().click();
+    for (const k of [
+      "Mulus, tanpa cacat",
+      "Bentuk atau ukuran tidak seragam",
+      "Memar atau lecet",
+      "Busuk sebagian",
+      "Terlalu matang",
+    ]) {
+      await page.getByText(k, { exact: false }).filter({ visible: true }).first().click();
+    }
+    await page.getByText("Berat", { exact: true }).filter({ visible: true }).first().click();
+    await isi(page, "800", "500");
+    await tekan(page, "Pasang permintaan").click();
+    await page.waitForTimeout(4000);
+    ok("permintaan kedua dipasang (tetap terbuka untuk pencocokan)");
+
     // -- 13 ----------------------------------------------------------------
-    judul("TULIS: petani baru menerbitkan penawaran dari foto galeri (B-01 … B-08)");
+    await judul("TULIS: petani baru menerbitkan penawaran dari foto galeri (B-01 … B-08)");
     await daftar(page, { peran: "Petani", nama: `Uji Smoke Petani ${tanda}` });
     await lihat(page, "Tambah hasil panen", { label: "pendaftaran petani" });
 
@@ -532,91 +571,59 @@ async function jalankan() {
         await keTabs(page);
       }
     }
-    if (!terbit) throw new Gagal("5 percobaan klasifikasi semuanya berkeyakinan rendah");
+    if (!terbit) {
+      const gagal504 = panggilan.filter((c) => c.startsWith("504") && c.includes("/penawaran"));
+      if (gagal504.length) {
+        throw new Gagal(
+          [
+            "POST /penawaran habis waktu (504) di setiap percobaan.",
+            "  Ini kegagalan BACKEND, bukan kegagalan test.",
+            "  Publikasi menjalankan pemindaian pencocokan balik dan penulisan",
+            "  notifikasi di dalam SATU request, dengan batas 10 detik di",
+            "  vercel.json. Biayanya tumbuh seiring jumlah permintaan aktif.",
+            `  ${gagal504.length} kali 504 pada run ini.`,
+          ].join("\n"),
+        );
+      }
+      throw new Gagal("5 percobaan klasifikasi semuanya berkeyakinan rendah");
+    }
 
     // -- 14 ----------------------------------------------------------------
-    judul("TULIS: catat transaksi lalu selesaikan (D-06, F-06)");
+    // The deal is struck with the SEEDED kompos buyer rather than the throwaway
+    // one, for a specific reason: registration mints a token but no password,
+    // so a test account can never be signed back into. Filing a mismatch report
+    // (F-04) requires the BUYER to view a completed transaction, which means
+    // switching persona — only possible with a seeded credentialed account.
+    //
+    // The cost is bounded: kompos gains completed transactions, which raises
+    // their reliability rather than lowering it, and the report is filed
+    // AGAINST the throwaway farmer. The F-06 contrast between the seeded
+    // farmers is never touched.
+    await judul("TULIS: catat transaksi dengan pembeli terdaftar (D-06)");
     await tekan(page, "Lihat pembeli terdekat").click();
-    // `.count()` is a point-in-time read with no waiting built in, so checking
-    // it straight after the tap sees the list mid-fetch ("Memuat…") and
-    // wrongly concludes nothing matched. Wait for the row instead.
-    const cocok = page.getByText("Uji Smoke Pembeli", { exact: false }).filter({ visible: true });
-    const adaCocok = await cocok
+    const kompos = page.getByText("Kompos Hijau Cimahi", { exact: false })
+      .filter({ visible: true });
+    const adaKompos = await kompos
       .first()
       .waitFor({ state: "visible", timeout: 25000 })
       .then(() => true)
       .catch(() => false);
-    if (adaCocok) {
-      await cocok.first().click();
-      await page.waitForTimeout(4000);
 
-      // Both fields are required or `catatTransaksi` returns early and the tap
-      // does nothing at all -- no request, no error on screen. The volume
-      // field's placeholder is the offer's own volume, so it cannot be
-      // targeted by a fixed string; fill positionally instead.
+    if (adaKompos) {
+      await kompos.first().click();
+      await page.waitForTimeout(4000);
       const kolom = page.locator("input:visible");
       await kolom.nth(0).fill("150");
       await kolom.nth(1).fill("450000");
-
       await tekan(page, "Catat transaksi").click();
       await page.waitForTimeout(4500);
       pastikan("POST", "/transaksi", "transaksi tercatat");
-
-      await keTabs(page);
-      await ketuk(page, "Profil");
-      await tekan(page, "Riwayat transaksi").click();
-      await page.waitForTimeout(4000);
-      // Same trap as above: count() does not wait, and the transaction list
-      // is still fetching right after navigating here.
-      const selesai = tekan(page, "Selesaikan transaksi");
-      const adaSelesai = await selesai
-        .waitFor({ state: "visible", timeout: 20000 })
-        .then(() => true)
-        .catch(() => false);
-      if (adaSelesai) {
-        // `selesai()` bails out with "beri penilaian dulu" when no rating is
-        // chosen — the tap would succeed and send nothing (F-06 requires the
-        // rating, so this is the screen working, not a bug).
-        await page.getByText("5 ★", { exact: true }).filter({ visible: true })
-          .first().click();
-        await page.waitForTimeout(600);
-        await selesai.click();
-        await page.waitForTimeout(4500);
-        pastikan("POST", "/selesai", "transaksi diselesaikan");
-      } else {
-        const l2 = await page.evaluate(() => document.body.innerText);
-        console.log("  ! tombol selesaikan tidak muncul - dilewati.");
-        console.log(
-          l2
-            .split(RegExp("\r?\n"))
-            .filter(Boolean)
-            .slice(0, 10)
-            .map((x) => "      " + x)
-            .join(String.fromCharCode(10)),
-        );
-      }
     } else {
-      // Report why rather than just skipping: the matching endpoint returns a
-      // breakdown of which filter removed each candidate (PRD D acceptance),
-      // which is exactly what is needed to tell a genuine mismatch from a
-      // broken test.
-      const layar = await page.evaluate(() => document.body.innerText);
-      console.log("  ! pembeli uji tidak muncul di daftar cocok — rantai transaksi dilewati.");
-      console.log("    --- yang dilaporkan layar pencocokan ---");
-      console.log(
-        layar
-          .split(/\r?\n/)
-          .filter(Boolean)
-          .slice(0, 12)
-          .map((l) => "      " + l)
-          .join("\n"),
-      );
+      console.log("  ! kompos tidak muncul di daftar cocok — rantai transaksi dilewati.");
     }
 
     // -- 15 ----------------------------------------------------------------
-    // Closes the loop the impact dashboard measures. Until this button existed
-    // `tingkat_penyaluran` was structurally stuck at 0 for every real user.
-    judul("TULIS: tandai penawaran tersalurkan (I-01)");
+    await judul("TULIS: tandai penawaran tersalurkan (I-01)");
     await keTabs(page);
     await ketuk(page, "Beranda");
     await page.getByText("Tomat", { exact: false }).filter({ visible: true })
@@ -628,35 +635,18 @@ async function jalankan() {
     await lihat(page, "Penawaran sudah tersalurkan", { label: "status berubah di layar" });
 
     // -- 16 ----------------------------------------------------------------
-    judul("TULIS: ubah lokasi terdaftar (A-02)");
+    await judul("TULIS: ubah lokasi terdaftar (A-02)");
     await keTabs(page);
     await ketuk(page, "Profil");
-    // EditLocationScreen exists and is registered, but the button that reaches
-    // it belongs on ProfileScreen -- a file under active redesign, so it was
-    // deliberately left alone (see HANDOFF.md, item 2). This step activates by
-    // itself the moment that button lands; until then it skips rather than
-    // failing, so the handoff dependency is visible in the run output instead
-    // of buried in a doc.
-    const tombolLokasi = tekan(page, "Ubah lokasi");
-    const adaTombol = await tombolLokasi
-      .waitFor({ state: "visible", timeout: 8000 })
-      .then(() => true)
-      .catch(() => false);
-
-    if (adaTombol) {
-      await tombolLokasi.click();
-      await lihat(page, "Lokasi terdaftar", { timeout: 20000 });
-      await isi(page, "mis. Lembang, Bandung Barat", "Cisarua, Bandung Barat");
-      await tekan(page, "Simpan lokasi").click();
-      await page.waitForTimeout(4000);
-      pastikan("PATCH", "/onboarding/saya/lokasi", "lokasi diperbarui");
-    } else {
-      console.log("  ! tombol \"Ubah lokasi\" belum ada di ProfileScreen — dilewati.");
-      console.log("    Layar UbahLokasi sudah siap; tinggal satu tombol. Lihat HANDOFF.md item 2.");
-    }
+    await tekan(page, "Ubah lokasi").click();
+    await lihat(page, "Lokasi terdaftar", { timeout: 20000 });
+    await isi(page, "mis. Lembang, Bandung Barat", "Cisarua, Bandung Barat");
+    await tekan(page, "Simpan lokasi").click();
+    await page.waitForTimeout(4000);
+    pastikan("PATCH", "/onboarding/saya/lokasi", "lokasi diperbarui");
 
     // -- 17 ----------------------------------------------------------------
-    judul("TULIS: papan komunitas (G-03)");
+    await judul("TULIS: papan komunitas (G-03)");
     await keTabs(page);
     await ketuk(page, "Komunitas");
     await page.getByText("Buat posting", { exact: false }).filter({ visible: true })
@@ -666,10 +656,72 @@ async function jalankan() {
       `Uji smoke otomatis ${tanda}.`);
     await tekan(page, "Kirim posting").click();
     await page.waitForTimeout(3500);
-    await lihat(page, `Uji smoke otomatis ${tanda}`, {
-      timeout: 20000,
-      label: "pos komunitas tersimpan (POST /komunitas/pos)",
-    });
+    pastikan("POST", "/komunitas/pos", "pos komunitas tersimpan");
+
+    // -- 18 ----------------------------------------------------------------
+    // Persona switch to the seeded buyer: only they can complete the deal from
+    // their side and then file the mismatch report the trust layer is built on.
+    await judul("SISI PEMBELI: selesaikan transaksi, lalu laporkan ketidaksesuaian (F-04, F-06)");
+    await masuk(page, "kompos", "terra123", "Pasokan");
+
+    await keTabs(page);
+    await ketuk(page, "Profil");
+    await tekan(page, "Riwayat transaksi").click();
+    await page.waitForTimeout(4000);
+
+    const selesai = tekan(page, "Selesaikan transaksi");
+    const adaSelesai = await selesai
+      .waitFor({ state: "visible", timeout: 20000 })
+      .then(() => true)
+      .catch(() => false);
+
+    if (adaSelesai) {
+      // F-06 requires a rating; `selesai()` bails out without one.
+      await page.getByText("5 ★", { exact: true }).filter({ visible: true })
+        .first().click();
+      await page.waitForTimeout(600);
+      await selesai.click();
+      await page.waitForTimeout(4500);
+      pastikan("POST", "/selesai", "transaksi diselesaikan");
+
+      // F-04: the report button only appears for a COMPLETED transaction seen
+      // by the buyer — which is exactly why the persona switch above exists.
+      const lapor = tekan(page, "Laporkan ketidaksesuaian");
+      const adaLapor = await lapor
+        .waitFor({ state: "visible", timeout: 15000 })
+        .then(() => true)
+        .catch(() => false);
+      if (adaLapor) {
+        await lapor.click();
+        await lihat(page, "Kondisi yang Anda temukan", { timeout: 20000 });
+        await page.getByText("Busuk sebagian", { exact: false }).filter({ visible: true })
+          .first().click();
+        await isi(page, "Jelaskan bedanya dengan yang dijanjikan…", `Uji smoke ${tanda}: kondisi berbeda.`);
+        await tekan(page, "Kirim laporan").click();
+        await page.waitForTimeout(4500);
+        pastikan("POST", "/laporan", "laporan ketidaksesuaian diajukan");
+      } else {
+        console.log("  ! tombol laporkan tidak muncul — dilewati.");
+      }
+    } else {
+      console.log("  ! tidak ada transaksi 'disepakati' untuk diselesaikan — dilewati.");
+    }
+
+    // -- 19 ----------------------------------------------------------------
+    await judul("SISI PEMBELI: tandai notifikasi dibaca (H-01)");
+    // Deliberately does NOT close this buyer's demand. `pmt_kompos` is seeded
+    // fixture data that step 13 matches against; closing it here would make
+    // the transaction chain fail on every later run.
+    await keTabs(page);
+    await ketuk(page, "Notifikasi");
+    const notif = page.locator('[role="button"]:visible').filter({ hasText: /Pasokan|cocok|MENDESAK/i });
+    if (await notif.count()) {
+      await notif.first().click();
+      await page.waitForTimeout(3000);
+      pastikan("POST", "/dibaca", "notifikasi ditandai dibaca");
+    } else {
+      console.log("  ! belum ada notifikasi untuk ditandai — dilewati.");
+    }
 
     console.log(`\n${"─".repeat(66)}`);
     console.log("SELESAI — seluruh langkah lulus.");

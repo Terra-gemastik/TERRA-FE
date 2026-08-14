@@ -349,6 +349,20 @@ export function ProfileScreen() {
               </Text>
 
               <Stack className="mt-gutter" gap="snug">
+                {/*
+                  PRD A-02. Location drives every distance in the product —
+                  matching radius, nearby venues, the photo geotag check — so a
+                  wrong pin at signup quietly breaks all three. The editor is a
+                  standalone screen (EditLocationScreen); this is the only entry
+                  point to it.
+                */}
+                <Button
+                  label="Ubah lokasi"
+                  variant="secondary"
+                  icon="location-outline"
+                  onPress={() => navigation.navigate("UbahLokasi")}
+                />
+
                 <Button
                   label="Riwayat transaksi"
                   variant="secondary"
