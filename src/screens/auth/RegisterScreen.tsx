@@ -36,13 +36,18 @@ import {
 import { lokasiSaatIni } from "@/lib/media";
 
 /**
- * Default fallback location.
- * Matches the seeded demo cluster so matching works immediately.
+ * NO DEFAULT COORDINATE ON PURPOSE.
+ *
+ * This used to fall back to Lembang so the seeded demo cluster matched
+ * immediately. That was silently wrong for everyone else: a farmer in Surabaya
+ * who did not grant location permission was SAVED at Lembang, and every
+ * distance in the product then lied to them -- buyer radius (D-01), nearby
+ * venues, and the F-02 geotag check, which would flag their honest photos as
+ * suspicious for being 600 km from their "registered" location.
+ *
+ * Location is now required to register. It is the one field the product cannot
+ * infer, and a wrong value is worse than a missing one.
  */
-const KOORDINAT_AWAL = {
-  latitude: -6.8118,
-  longitude: 107.6175,
-};
 
 export function RegisterScreen() {
   const { masuk } = useAuth();
@@ -64,7 +69,7 @@ export function RegisterScreen() {
 
   const [namaUsaha, setNamaUsaha] = useState("");
 
-  const [koordinat, setKoordinat] = useState(KOORDINAT_AWAL);
+  const [koordinat, setKoordinat] = useState<{ latitude: number; longitude: number } | null>(null);
 
   const [lokasiAktif, setLokasiAktif] = useState(false);
 
@@ -76,6 +81,7 @@ export function RegisterScreen() {
     daftarPetani.isPending || daftarPembeli.isPending;
 
   const ambilLokasi = async () => {
+    setGalat(null);
     setMengambilLokasi(true);
 
     try {
@@ -84,7 +90,14 @@ export function RegisterScreen() {
       if (posisi) {
         setKoordinat(posisi);
         setLokasiAktif(true);
+        return;
       }
+      // Silence here used to mean "registered at Lembang". Say so instead.
+      setGalat(
+        new Error(
+          "Izin lokasi ditolak. TERRA memakai lokasi Anda untuk mengukur jarak ke pembeli dan tempat penyaluran, jadi lokasi wajib diisi.",
+        ),
+      );
     } finally {
       setMengambilLokasi(false);
     }
@@ -95,6 +108,18 @@ export function RegisterScreen() {
 
     if (nama.trim().length < 2) {
       setGalat(new Error("Nama minimal 2 karakter."));
+      return;
+    }
+
+    // A-02. Registering without a real coordinate used to fall back to
+    // Lembang, which quietly broke matching, venues and the F-02 geotag check
+    // for anyone outside that area. Missing beats wrong.
+    if (!koordinat) {
+      setGalat(
+        new Error(
+          "Lokasi belum diambil. Tekan “Gunakan lokasi saya” supaya jarak ke pembeli bisa dihitung dengan benar.",
+        ),
+      );
       return;
     }
 
@@ -336,7 +361,7 @@ export function RegisterScreen() {
                     >
                       {lokasiAktif
                         ? "Lokasi berhasil digunakan untuk pencocokan."
-                        : "Aktifkan lokasi untuk mendapatkan hasil pencocokan yang lebih relevan."}
+                        : "Wajib diisi — jarak ke pembeli dan tempat penyaluran diukur dari titik ini."}
                     </Text>
                   </View>
 

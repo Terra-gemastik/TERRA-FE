@@ -1,0 +1,173 @@
+# Build an installable Android APK and publish it on GitHub.
+#
+# Every build produces the APK in two places, because they serve different
+# needs:
+#   * a workflow ARTIFACT  -- attached to the run, kept 30 days, good for
+#     "does this branch work?"
+#   * a GitHub RELEASE     -- permanent, and since this repo is public the
+#     download link works for anyone, no GitHub account needed. This is the
+#     one to share with teammates or hand to a judge.
+#
+# WHY NOT EAS BUILD
+#   EAS is less to configure but bills against a monthly quota and needs an
+#   Expo account token. Building on the runner is free, has no quota, and
+#   keeps the artifact under your control. The trade is ~10-15 min per build.
+#
+# SIGNING
+#   Expo's prebuild template signs release builds with its checked-in debug
+#   keystore. That yields a genuinely installable APK with the JS bundle
+#   embedded and a stable signature across builds, with no secrets to manage --
+#   right for internal testing and for putting the app on a judge's phone.
+#   It is NOT Play Store publishable; see the note at the bottom of the file.
+
+name: APK
+
+on:
+  workflow_dispatch:          # build on demand from the Actions tab
+    inputs:
+      catatan:
+        description: "Note to show in the release body"
+        required: false
+        default: ""
+  push:
+    branches: [main]
+    paths:                    # a docs-only commit should not burn 15 minutes
+      - "src/**"
+      - "assets/**"
+      - "app.json"
+      - "package.json"
+      - "package-lock.json"
+      - "babel.config.js"
+      - "metro.config.js"
+      - "tailwind.config.js"
+      - ".github/workflows/apk.yml"
+
+permissions:
+  contents: write             # needed to create the Release that hosts the APK
+
+concurrency:                  # a newer push supersedes an in-flight build
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bangun:
+    name: Build & publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Expo SDK 52 targets JDK 17.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Reported, not enforced. A type error should be visible in the log
+      # without blocking a build someone is waiting on to test something else.
+      - name: Typecheck and token lint
+        run: npm run check
+        continue-on-error: true
+
+      - name: Generate the native project
+        # EXPO_PUBLIC_* is inlined into the JS bundle at BUILD time, not read
+        # at runtime. Without it the APK ships pointing at the local-dev
+        # fallback in src/api/client.ts, and every screen fails to load on a
+        # real phone -- a failure that only shows up after install.
+        env:
+          EXPO_PUBLIC_API_URL: ${{ vars.EXPO_PUBLIC_API_URL }}
+        run: |
+          if [ -z "$EXPO_PUBLIC_API_URL" ]; then
+            echo "::error::Repository variable EXPO_PUBLIC_API_URL is not set."
+            echo "Settings -> Secrets and variables -> Actions -> Variables tab."
+            echo "Set it to the deployed backend, e.g. https://terra-be.vercel.app"
+            exit 1
+          fi
+          npx expo prebuild --platform android --no-install
+
+      - name: Build release APK
+        env:
+          EXPO_PUBLIC_API_URL: ${{ vars.EXPO_PUBLIC_API_URL }}
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Locate and name the APK
+        id: apk
+        run: |
+          BERKAS=$(find android/app/build/outputs/apk/release -name "*.apk" | head -1)
+          if [ -z "$BERKAS" ]; then
+            echo "::error::Gradle finished but produced no APK."
+            exit 1
+          fi
+          VERSI=$(node -p "require('./app.json').expo.version")
+          NAMA="terra-v${VERSI}-build${{ github.run_number }}.apk"
+          cp "$BERKAS" "$NAMA"
+
+          echo "berkas=$NAMA"                        >> "$GITHUB_OUTPUT"
+          echo "versi=$VERSI"                        >> "$GITHUB_OUTPUT"
+          echo "ukuran=$(du -h "$NAMA" | cut -f1)"   >> "$GITHUB_OUTPUT"
+
+      # Available from the run page straight away, including for builds that
+      # you would rather not cut a release for.
+      - name: Attach to the workflow run
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.apk.outputs.berkas }}
+          path: ${{ steps.apk.outputs.berkas }}
+          retention-days: 30
+
+      # The shareable copy: a permanent, public, no-login download link.
+      - name: Publish as a GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: TERRA v${{ steps.apk.outputs.versi }} (build ${{ github.run_number }})
+          body: |
+            **[Download the APK](https://github.com/${{ github.repository }}/releases/download/apk-${{ github.run_number }}/${{ steps.apk.outputs.berkas }})** · ${{ steps.apk.outputs.ukuran }}
+
+            | | |
+            |---|---|
+            | Backend | `${{ vars.EXPO_PUBLIC_API_URL }}` |
+            | Commit | ${{ github.sha }} |
+            | Built | ${{ github.event_name }} |
+
+            ${{ github.event.inputs.catatan }}
+
+            Debug-signed, for internal testing. Android will warn about
+            installing outside the Play Store — expected for a build shared
+            this way. Allow "install unknown apps" for your browser once.
+          files: ${{ steps.apk.outputs.berkas }}
+
+      - name: Summary
+        run: |
+          {
+            echo "### APK siap"
+            echo ""
+            echo "**[Unduh](https://github.com/${{ github.repository }}/releases/download/apk-${{ github.run_number }}/${{ steps.apk.outputs.berkas }})** · ${{ steps.apk.outputs.ukuran }}"
+            echo ""
+            echo "Backend: \`${{ vars.EXPO_PUBLIC_API_URL }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+# SHIPPING TO PLAY STORE LATER
+#   Google will not accept a debug-signed APK, and the signing key can never
+#   change once an app is published. When that time comes:
+#     keytool -genkeypair -v -keystore terra.keystore -alias terra \
+#             -keyalg RSA -keysize 2048 -validity 10000
+#   Store `base64 -w0 terra.keystore` plus the passwords as repository
+#   secrets, decode it in a step before gradle, point a release signingConfig
+#   at it in android/app/build.gradle, and switch to `bundleRelease` (.aab).
+#   Keep the keystore backed up somewhere outside the repo -- losing it means
+#   never being able to update the app again.
